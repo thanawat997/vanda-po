@@ -12,6 +12,32 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import logo from "@/assets/logo.png";
 
+// Size options for dropdown
+const sizeOptions = [
+  "1oz. (BK)", "1.5oz. (BK)", "2oz. D.62 ทรงสูง (BK)", "2oz. D.62 ทรงเตี้ย (BK)", 
+  "3oz. D.75 (BK)", "3oz. D.78 (BK)", "4.7oz. D.78 (BK)", "8oz. D.78 (BK)", 
+  "10oz. D.90 (BK)", "10oz. D.95 (BK)", "12oz. D.95 (BK)", "450 ml.", "K500 ml.", 
+  "V500 ml.", "F500 ml.", "K1000 ml.", "V1000 ml.", "F1000 ml.", "Tub K & Inner", 
+  "Bowl (ใส)", "Bowl (ดำ)", "Bowl (ใส) & Inner", "Bowl (ดำ) & Inner", "F750 ml.", 
+  "V750 ml.", "F75 OZ.", "F78 OZ.", "F78 OZ. (ไม่เจาะ)", "D78 OZ.", "D78 OZ. (ไม่เจาะ)", 
+  "F85 OZ.", "D85 OZ.", "F90 OZ.", "F90 OZ. (ไม่เจาะ)", "D90 OZ.", "D90 OZ. (ไม่เจาะ)", 
+  "F92 OZ.", "D92 OZ.", "F95 OZ.", "F95 OZ. (ไม่เจาะ)", "D95 OZ.", "D95 OZ. (ไม่เจาะ)", 
+  "F98 OZ.", "D98 OZ.", "H98 OZ.", "CS98 OZ.", "ยกดื่ม 98", "เปิดปิด 98", "D95 ปิด PP", 
+  "H95 ปิด PP", "D98 BIO-PET", "2.5oz. D.57", "7oz. D.78", "9oz. D.78", "12oz. D.85", 
+  "12oz. D.90", "12oz. D.92", "14oz. D.92", "16oz. D.95", "16oz. D.98", "16oz. D.98 หนา", 
+  "18oz. D.95", "20oz. D.98", "22oz. D.95", "22oz. D.98 BCR", "22oz. D.98 ทรงริ้ว", 
+  "12oz. D.98 Pet-CS", "16oz. D.98 Pet-CS", "18oz. D.98 Pet-CS", "20oz. D.98 Pet-CS", 
+  "22oz. D.98 Pet-CS", "500g.", "12oz. D.95 PP", "16oz. D.95 PP", "20oz. D.95 PP", 
+  "22oz. D.95 PP", "16oz. D.98 BIO-PET", "Dish 7\"", "Dish 8\"", "Dish 9\"", "79 OZ.", 
+  "12oz. D.95 PP-CS", "16oz. D.95 PP-CS", "18oz. D.95 PP-CS", "20oz. D.95 PP-CS", 
+  "22oz. D.95 PP-CS", "ยกดื่ม 92 BIO-PET", "ยกดื่ม 98 BIO-PET", "SIP 98 OZ.", 
+  "ยกดื่ม 92 OZ.", "13 OZ. D.118", "0.5 OZ.", "220 CC.", "14oz. D.98", "ชามดำ750 ml.", 
+  "ชามแดง750 ml.", "ชามดำ750 & Inner", "ชามแดง750 & Inner"
+];
+
+// Product type options for dropdown
+const productTypeOptions = ["SD", "LID", "Tub", "Bowl"];
+
 // Product list for dropdown
 const productOptions = [
   { name: "ถ้วยเบเกอรี่ PET 2 ออนซ์ ปาก 62 พร้อมฝา ทรงสูง (Pack 2,000 set)", code: "S1103026A005" },
@@ -314,11 +340,13 @@ const OrderForm = () => {
   });
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>(
-    Array.from({ length: 8 }, () => createEmptyOrderItem())
+    Array.from({ length: 4 }, () => createEmptyOrderItem())
   );
 
   const [signature, setSignature] = useState("");
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
+  const [openSizeDropdownIndex, setOpenSizeDropdownIndex] = useState<number | null>(null);
+  const [openProductTypeDropdownIndex, setOpenProductTypeDropdownIndex] = useState<number | null>(null);
 
   const handleDownloadPDF = async () => {
     if (!formRef.current) return;
@@ -725,18 +753,116 @@ const OrderForm = () => {
                       />
                     </td>
                     <td className="border border-black p-1">
-                      <Input
-                        value={item.productType}
-                        onChange={(e) => updateOrderItem(index, "productType", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
-                      />
+                      <div className="flex items-start gap-1">
+                        <Popover open={openProductTypeDropdownIndex === index} onOpenChange={(open) => setOpenProductTypeDropdownIndex(open ? index : null)}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              role="combobox"
+                              aria-expanded={openProductTypeDropdownIndex === index}
+                              className="flex-1 min-h-6 h-auto justify-between p-1 text-xs font-normal hover:bg-transparent whitespace-normal text-left"
+                            >
+                              <span className="flex-1 break-words">{item.productType || "..."}</span>
+                              <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[120px] p-0 bg-white z-50" align="start">
+                            <Command>
+                              <CommandInput placeholder="ค้นหา..." className="h-9" />
+                              <CommandList>
+                                <CommandEmpty>ไม่พบรายการ</CommandEmpty>
+                                <CommandGroup className="max-h-[200px] overflow-auto">
+                                  {productTypeOptions.map((type) => (
+                                    <CommandItem
+                                      key={type}
+                                      value={type}
+                                      onSelect={() => {
+                                        updateOrderItem(index, "productType", type);
+                                        setOpenProductTypeDropdownIndex(null);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-3 w-3",
+                                          item.productType === type ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {type}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {item.productType && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => updateOrderItem(index, "productType", "")}
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                          >
+                            ×
+                          </Button>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-black p-1">
-                      <Input
-                        value={item.size}
-                        onChange={(e) => updateOrderItem(index, "size", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
-                      />
+                      <div className="flex items-start gap-1">
+                        <Popover open={openSizeDropdownIndex === index} onOpenChange={(open) => setOpenSizeDropdownIndex(open ? index : null)}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              role="combobox"
+                              aria-expanded={openSizeDropdownIndex === index}
+                              className="flex-1 min-h-6 h-auto justify-between p-1 text-xs font-normal hover:bg-transparent whitespace-normal text-left"
+                            >
+                              <span className="flex-1 break-words">{item.size || "..."}</span>
+                              <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[200px] p-0 bg-white z-50" align="start">
+                            <Command>
+                              <CommandInput placeholder="ค้นหาขนาด..." className="h-9" />
+                              <CommandList>
+                                <CommandEmpty>ไม่พบรายการ</CommandEmpty>
+                                <CommandGroup className="max-h-[300px] overflow-auto">
+                                  {sizeOptions.map((size) => (
+                                    <CommandItem
+                                      key={size}
+                                      value={size}
+                                      onSelect={() => {
+                                        updateOrderItem(index, "size", size);
+                                        setOpenSizeDropdownIndex(null);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-3 w-3",
+                                          item.size === size ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {size}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {item.size && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => updateOrderItem(index, "size", "")}
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                          >
+                            ×
+                          </Button>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-black p-1 w-[280px] min-w-[280px] max-w-[280px]">
                       <div className="flex items-start gap-1">
