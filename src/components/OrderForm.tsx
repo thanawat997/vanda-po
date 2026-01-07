@@ -266,6 +266,7 @@ const OrderForm = () => {
           <div className="border border-black overflow-x-auto">
             <table className="w-full text-[10px] border-collapse">
               <thead>
+                {/* Row 1: Main headers */}
                 <tr>
                   <th className="border border-black p-1 text-center align-middle font-normal" colSpan={4}>
                     ชนิดวัตถุดิบ
@@ -273,32 +274,33 @@ const OrderForm = () => {
                   <th className="border border-black p-1 text-center align-middle font-normal" colSpan={5}>
                     คุณลักษณะการใช้งาน
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>ชนิดสินค้า</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-40" rowSpan={2}>รายละเอียด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>ชนิดสินค้า</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>ขนาด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-40" rowSpan={3}>รายละเอียด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
                     <div>จำนวนการสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
                     <div>ราคา@</div>
                     <div>(บาท)</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
                     <div>วัน</div>
                     <div>กำหนด</div>
                     <div>ส่ง</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={1}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
                     <div>ส่งได้</div>
-                    <div>ตามกำหนด</div>
+                    <div>ตาม</div>
+                    <div>กำหนด</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={1}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
                     <div>ส่งไม่ได้</div>
                     <div>ตาม</div>
                     <div>กำหนด</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
                     <div>ประเ</div>
                     <div>ทศ</div>
                     <div>ที่</div>
@@ -309,63 +311,84 @@ const OrderForm = () => {
                     <div>กฎหมา</div>
                     <div>ยอ้างอิง</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>หมายเหตุ</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>หมายเหตุ</th>
                 </tr>
+                {/* Row 2: Material types and usage categories */}
                 <tr>
-                  {/* ชนิดวัตถุดิบ */}
-                  <th className="border border-black p-1 text-center font-normal">
-                    <div>PS</div>
-                    <div className="text-[7px]">(อุณหภูมิสูงสุดที่</div>
-                    <div className="text-[7px]">-20 C° ถึง 80 C°)</div>
+                  <th className="border border-black p-1 text-center font-normal w-8">PS</th>
+                  <th className="border border-black p-1 text-center font-normal w-8">PP</th>
+                  <th className="border border-black p-1 text-center font-normal w-8">PET</th>
+                  <th className="border border-black p-1 text-center font-normal w-8">PLA</th>
+                  <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        ใส่ของร้อน(ที่อุณหภูมิ 45 - 70 C°)
+                      </span>
+                    </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal">
-                    <div>PP</div>
-                    <div className="text-[7px]">(อุณหภูมิสูงสุดที่</div>
-                    <div className="text-[7px]">-10 C° ถึง 100 C°/</div>
-                    <div className="text-[7px]">120 C°(M))</div>
+                  <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        ที่อุณหภูมิปกติ(ที่อุณหภูมิ 25 C°)
+                      </span>
+                    </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal">
-                    <div>PET</div>
-                    <div className="text-[7px]">(อุณหภูมิสูงสุดที่</div>
-                    <div className="text-[7px]">-10 C° ถึง 70 C°)</div>
+                  <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        ที่อุณหภูมิแช่เย็น(ที่อุณหภูมิ 0 - 10 C°)
+                      </span>
+                    </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal">
-                    <div>PLA</div>
-                    <div className="text-[7px]">(อุณหภูมิสูงสุดที่</div>
-                    <div className="text-[7px]">0 C° ถึง 50 C°)</div>
+                  <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        ที่อุณหภูมิแช่แข็ง(ที่อุณหภูมิ -1 ถึง -80 C°)
+                      </span>
+                    </div>
                   </th>
-                  {/* คุณลักษณะการใช้งาน */}
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-16">
-                    <div>ใส่ของร้อน</div>
-                    <div>(ที่อุณหภูมิ</div>
-                    <div>45 - 70 C°)</div>
+                  <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        อื่นๆ
+                      </span>
+                    </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-16">
-                    <div>ที่อุณหภูมิปกติ</div>
-                    <div>(ที่อุณหภูมิ</div>
-                    <div>25 C°)</div>
-                  </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-16">
-                    <div>ที่อุณหภูมิแช่เย็น</div>
-                    <div>(ที่อุณหภูมิ</div>
-                    <div>0 - 10 C°)</div>
-                  </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-16">
-                    <div>ที่อุณหภูมิแช่แข็ง</div>
-                    <div>(ที่อุณหภูมิ</div>
-                    <div>-1 ถึง -80 C°)</div>
-                  </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-12">
-                    <div>อื่นๆ</div>
-                  </th>
-                  {/* Empty cells for rowspan alignment */}
-                  <th className="border border-black p-1 text-center font-normal text-[8px]"></th>
-                  <th className="border border-black p-1 text-center font-normal text-[8px]"></th>
-                  {/* กฎหมายอ้างอิง */}
-                  <th className="border border-black p-1 text-center font-normal text-[8px]">ไทย</th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px]">
+                  <th className="border border-black p-1 text-center font-normal text-[8px]" rowSpan={2}>ไทย</th>
+                  <th className="border border-black p-1 text-center font-normal text-[7px]" rowSpan={2}>
                     <div>ต่างประเทศ</div>
                     <div>(ระบุ)</div>
+                  </th>
+                </tr>
+                {/* Row 3: Temperature descriptions (rotated) */}
+                <tr>
+                  <th className="border border-black p-1 text-center font-normal h-24">
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        (อุณหภูมิสูงสุดที่ -20 C° ถึง 80 C°)
+                      </span>
+                    </div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal h-24">
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        (อุณหภูมิสูงสุดที่ -10 C° ถึง 100 C°/120 C°(M))
+                      </span>
+                    </div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal h-24">
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        (อุณหภูมิสูงสุดที่ -10 C° ถึง 70 C°)
+                      </span>
+                    </div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal h-24">
+                    <div className="h-24 flex items-center justify-center">
+                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        (อุณหภูมิสูงสุดที่ 0 C° ถึง 50 C°)
+                      </span>
+                    </div>
                   </th>
                 </tr>
               </thead>
@@ -444,6 +467,7 @@ const OrderForm = () => {
                         className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
                       />
                     </td>
+                    <td className="border border-black p-1"></td>
                     <td className="border border-black p-1">
                       <Input
                         value={item.lawRef}
@@ -475,6 +499,7 @@ const OrderForm = () => {
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1 w-40"></td>
+                    <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
