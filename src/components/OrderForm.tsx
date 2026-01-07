@@ -288,32 +288,34 @@ const OrderForm = () => {
     contactPerson: "",
   });
 
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([
-    {
-      ps: false,
-      pp: false,
-      pet: false,
-      pla: false,
-      hotFood: false,
-      normalTemp: false,
-      coldTemp: false,
-      freezeTemp: false,
-      otherUsage: false,
-      productType: "",
-      size: "",
-      details: "",
-      quantity: "",
-      price: "",
-      deliveryDate: "",
-      deliverableNote: "",
-      notDeliverableNote: "",
-      exportType: "",
-      thai: false,
-      foreign: false,
-      lawRef: "",
-      notes: "",
-    },
-  ]);
+  const createEmptyOrderItem = (): OrderItem => ({
+    ps: false,
+    pp: false,
+    pet: false,
+    pla: false,
+    hotFood: false,
+    normalTemp: false,
+    coldTemp: false,
+    freezeTemp: false,
+    otherUsage: false,
+    productType: "",
+    size: "",
+    details: "",
+    quantity: "",
+    price: "",
+    deliveryDate: "",
+    deliverableNote: "",
+    notDeliverableNote: "",
+    exportType: "",
+    thai: false,
+    foreign: false,
+    lawRef: "",
+    notes: "",
+  });
+
+  const [orderItems, setOrderItems] = useState<OrderItem[]>(
+    Array.from({ length: 8 }, () => createEmptyOrderItem())
+  );
 
   const [signature, setSignature] = useState("");
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
@@ -347,33 +349,7 @@ const OrderForm = () => {
   };
 
   const addOrderItem = () => {
-    setOrderItems([
-      ...orderItems,
-      {
-        ps: false,
-        pp: false,
-        pet: false,
-        pla: false,
-        hotFood: false,
-        normalTemp: false,
-        coldTemp: false,
-        freezeTemp: false,
-        otherUsage: false,
-        productType: "",
-        size: "",
-        details: "",
-        quantity: "",
-        price: "",
-        deliveryDate: "",
-        deliverableNote: "",
-        notDeliverableNote: "",
-        exportType: "",
-        thai: false,
-        foreign: false,
-        lawRef: "",
-        notes: "",
-      },
-    ]);
+    setOrderItems([...orderItems, createEmptyOrderItem()]);
   };
 
   const updateOrderItem = (index: number, field: keyof OrderItem, value: string | boolean) => {
@@ -885,32 +861,6 @@ const OrderForm = () => {
                         className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
                       />
                     </td>
-                  </tr>
-                ))}
-                {/* Empty rows for more space */}
-                {Array.from({ length: Math.max(0, 8 - orderItems.length) }).map((_, index) => (
-                  <tr key={`empty-${index}`}>
-                    <td className="border border-black p-1 h-8"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1 w-[280px] min-w-[280px] max-w-[280px]"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
                   </tr>
                 ))}
               </tbody>
