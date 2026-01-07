@@ -1,7 +1,12 @@
 import { useState, useRef } from "react";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { th } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import logo from "@/assets/logo.png";
@@ -30,7 +35,7 @@ const OrderForm = () => {
     otherText: "",
     orderNumber: "",
     customerName: "",
-    date: "",
+    date: undefined as Date | undefined,
     contactPerson: "",
   });
 
@@ -217,11 +222,35 @@ const OrderForm = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm underline">วันที่</span>
-              <Input
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-36 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-36 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent justify-start text-left font-normal px-0 hover:bg-transparent",
+                      !formData.date && "text-muted-foreground"
+                    )}
+                  >
+                    {formData.date ? (
+                      format(formData.date, "dd/MM/yyyy", { locale: th })
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <CalendarIcon className="h-3 w-3" />
+                        เลือกวันที่
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.date}
+                    onSelect={(date) => setFormData({ ...formData, date })}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm underline">บุคคลที่ติดต่อ</span>
@@ -241,12 +270,12 @@ const OrderForm = () => {
                   <th className="border border-black p-1 text-center align-middle font-normal" colSpan={4}>
                     ชนิดวัตถุดิบ
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={7}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={5}>
                     คุณลักษณะการใช้งาน
                   </th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>ชนิดสินค้า</th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>รายละเอียด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-40" rowSpan={2}>รายละเอียด</th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>
                     <div>จำนวนการสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
@@ -283,46 +312,61 @@ const OrderForm = () => {
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={2}>หมายเหตุ</th>
                 </tr>
                 <tr>
-                  <th className="border border-black p-1 text-center font-normal">PS</th>
-                  <th className="border border-black p-1 text-center font-normal">PP</th>
-                  <th className="border border-black p-1 text-center font-normal">PET</th>
-                  <th className="border border-black p-1 text-center font-normal">PLA</th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-12">
-                    <div>(อุณหภูมิสูงสุด</div>
-                    <div>-20°C ถึง 80°C)</div>
-                    <div>(อุณหภูมิแช่แข็ง</div>
-                    <div>-10°C ถึง100°C/120</div>
+                  {/* ชนิดวัตถุดิบ */}
+                  <th className="border border-black p-1 text-center font-normal">
+                    <div>PS</div>
+                    <div className="text-[7px]">(อุณหภูมิสูงสุดที่</div>
+                    <div className="text-[7px]">-20 C° ถึง 80 C°)</div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal">
+                    <div>PP</div>
+                    <div className="text-[7px]">(อุณหภูมิสูงสุดที่</div>
+                    <div className="text-[7px]">-10 C° ถึง 100 C°/</div>
+                    <div className="text-[7px]">120 C°(M))</div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal">
+                    <div>PET</div>
+                    <div className="text-[7px]">(อุณหภูมิสูงสุดที่</div>
+                    <div className="text-[7px]">-10 C° ถึง 70 C°)</div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal">
+                    <div>PLA</div>
+                    <div className="text-[7px]">(อุณหภูมิสูงสุดที่</div>
+                    <div className="text-[7px]">0 C° ถึง 50 C°)</div>
+                  </th>
+                  {/* คุณลักษณะการใช้งาน */}
+                  <th className="border border-black p-1 text-center font-normal text-[7px] w-16">
+                    <div>ใส่ของร้อน</div>
+                    <div>(ที่อุณหภูมิ</div>
+                    <div>45 - 70 C°)</div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal text-[7px] w-16">
+                    <div>ที่อุณหภูมิปกติ</div>
+                    <div>(ที่อุณหภูมิ</div>
+                    <div>25 C°)</div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal text-[7px] w-16">
+                    <div>ที่อุณหภูมิแช่เย็น</div>
+                    <div>(ที่อุณหภูมิ</div>
+                    <div>0 - 10 C°)</div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal text-[7px] w-16">
+                    <div>ที่อุณหภูมิแช่แข็ง</div>
+                    <div>(ที่อุณหภูมิ</div>
+                    <div>-1 ถึง -80 C°)</div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal text-[7px] w-12">
-                    <div>(CMI)</div>
-                    <div>(อุณหภูมิแช่เย็น</div>
-                    <div>-10°C ถึง 70°C)</div>
-                  </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-12">
-                    <div>(อุณหภูมิแช่เย็น</div>
-                    <div>0°C ถึง 50°C)</div>
-                  </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-12">
-                    <div>ไมโครเวฟ</div>
-                    <div>(ที่อุณหภูมิ45-70°C)</div>
-                    <div>(ที่อุณหภูมิปกติ)</div>
-                  </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-12">
-                    <div>(ที่อุณหภูมิแช่เย็น</div>
-                    <div>(ที่อุณหภูมิ25°C)</div>
-                  </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-12">
-                    <div>(ที่อุณหภูมิ0-10°C)</div>
-                    <div>(ที่อุณหภูมิแช่แข็ง)</div>
-                  </th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px] w-12">
-                    <div>(ที่อุณหภูมิ-1 ถึง 80°C)</div>
                     <div>อื่นๆ</div>
                   </th>
+                  {/* Empty cells for rowspan alignment */}
                   <th className="border border-black p-1 text-center font-normal text-[8px]"></th>
                   <th className="border border-black p-1 text-center font-normal text-[8px]"></th>
+                  {/* กฎหมายอ้างอิง */}
                   <th className="border border-black p-1 text-center font-normal text-[8px]">ไทย</th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px]">ค่าประเทศ(ระบุ)</th>
+                  <th className="border border-black p-1 text-center font-normal text-[7px]">
+                    <div>ต่างประเทศ</div>
+                    <div>(ระบุ)</div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -332,8 +376,6 @@ const OrderForm = () => {
                     <td className="border border-black p-1 h-8 w-8"></td>
                     <td className="border border-black p-1 h-8 w-8"></td>
                     <td className="border border-black p-1 h-8 w-8"></td>
-                    <td className="border border-black p-1 h-8"></td>
-                    <td className="border border-black p-1 h-8"></td>
                     <td className="border border-black p-1 h-8"></td>
                     <td className="border border-black p-1 h-8"></td>
                     <td className="border border-black p-1 h-8"></td>
@@ -353,11 +395,11 @@ const OrderForm = () => {
                         className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
                       />
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 w-40">
                       <Input
                         value={item.details}
                         onChange={(e) => updateOrderItem(index, "details", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent w-full"
                       />
                     </td>
                     <td className="border border-black p-1">
@@ -432,9 +474,7 @@ const OrderForm = () => {
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1"></td>
+                    <td className="border border-black p-1 w-40"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
