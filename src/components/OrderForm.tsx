@@ -762,52 +762,64 @@ const OrderForm = () => {
                         className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
                       />
                     </td>
-                    <td className="border border-black p-1 w-48">
-                      <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
-                        <PopoverTrigger asChild>
+                    <td className="border border-black p-1 w-[280px] min-w-[280px] max-w-[280px]">
+                      <div className="flex items-start gap-1">
+                        <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              role="combobox"
+                              aria-expanded={openDropdownIndex === index}
+                              className="flex-1 min-h-6 h-auto justify-between p-1 text-xs font-normal hover:bg-transparent whitespace-normal text-left"
+                            >
+                              <span className="flex-1 break-words">{item.details || "เลือกรายละเอียด..."}</span>
+                              <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[400px] p-0 bg-white z-50" align="start">
+                            <Command>
+                              <CommandInput placeholder="ค้นหารายละเอียด..." className="h-9" />
+                              <CommandList>
+                                <CommandEmpty>ไม่พบรายการ</CommandEmpty>
+                                <CommandGroup className="max-h-[300px] overflow-auto">
+                                  {productOptions.map((product) => (
+                                    <CommandItem
+                                      key={product.code}
+                                      value={`${product.name} ${product.code}`}
+                                      onSelect={() => {
+                                        updateOrderItem(index, "details", `${product.name} // ${product.code}`);
+                                        setOpenDropdownIndex(null);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-3 w-3",
+                                          item.details === `${product.name} // ${product.code}` ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      <div className="flex flex-col">
+                                        <span className="break-words">{product.name}</span>
+                                        <span className="text-muted-foreground text-[10px]">{product.code}</span>
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {item.details && (
                           <Button
                             variant="ghost"
-                            role="combobox"
-                            aria-expanded={openDropdownIndex === index}
-                            className="w-full h-6 justify-between p-0 text-xs font-normal hover:bg-transparent truncate"
+                            size="sm"
+                            onClick={() => updateOrderItem(index, "details", "")}
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
                           >
-                            <span className="truncate text-left flex-1">{item.details || "เลือกรายละเอียด..."}</span>
-                            <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                            ×
                           </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[400px] p-0 bg-white z-50" align="start">
-                          <Command>
-                            <CommandInput placeholder="ค้นหารายละเอียด..." className="h-9" />
-                            <CommandList>
-                              <CommandEmpty>ไม่พบรายการ</CommandEmpty>
-                              <CommandGroup className="max-h-[300px] overflow-auto">
-                                {productOptions.map((product) => (
-                                  <CommandItem
-                                    key={product.code}
-                                    value={`${product.name} ${product.code}`}
-                                    onSelect={() => {
-                                      updateOrderItem(index, "details", `${product.name} // ${product.code}`);
-                                      setOpenDropdownIndex(null);
-                                    }}
-                                    className="text-xs"
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-3 w-3",
-                                        item.details === `${product.name} // ${product.code}` ? "opacity-100" : "opacity-0"
-                                      )}
-                                    />
-                                    <div className="flex flex-col">
-                                      <span className="truncate">{product.name}</span>
-                                      <span className="text-muted-foreground text-[10px]">{product.code}</span>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-black p-1">
                       <Input
@@ -889,7 +901,7 @@ const OrderForm = () => {
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1 w-48"></td>
+                    <td className="border border-black p-1 w-[280px] min-w-[280px] max-w-[280px]"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
