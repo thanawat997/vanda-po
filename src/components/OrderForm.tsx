@@ -546,9 +546,9 @@ const OrderForm = () => {
                   <th className="border border-black p-1 text-center align-middle font-normal" colSpan={5}>
                     คุณลักษณะการใช้งาน
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>ชนิดสินค้า</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-48" rowSpan={3}>รายละเอียด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-16 min-w-16 max-w-16" rowSpan={3}>ชนิดสินค้า</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-24 min-w-24 max-w-24" rowSpan={3}>ขนาด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-44 min-w-44 max-w-44" rowSpan={3}>รายละเอียด</th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
                     <div>จำนวนการสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
@@ -752,7 +752,7 @@ const OrderForm = () => {
                         className="w-3 h-3"
                       />
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 w-16 min-w-16 max-w-16">
                       <div className="flex items-start gap-1">
                         <Popover open={openProductTypeDropdownIndex === index} onOpenChange={(open) => setOpenProductTypeDropdownIndex(open ? index : null)}>
                           <PopoverTrigger asChild>
@@ -808,7 +808,7 @@ const OrderForm = () => {
                         )}
                       </div>
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 w-24 min-w-24 max-w-24">
                       <div className="flex items-start gap-1">
                         <Popover open={openSizeDropdownIndex === index} onOpenChange={(open) => setOpenSizeDropdownIndex(open ? index : null)}>
                           <PopoverTrigger asChild>
@@ -864,7 +864,7 @@ const OrderForm = () => {
                         )}
                       </div>
                     </td>
-                    <td className="border border-black p-1 w-[280px] min-w-[280px] max-w-[280px]">
+                    <td className="border border-black p-1 w-44 min-w-44 max-w-44">
                       <div className="flex items-start gap-1">
                         <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
                           <PopoverTrigger asChild>
