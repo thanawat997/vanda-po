@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { Download, Plus, CalendarIcon } from "lucide-react";
+import { Download, Plus, CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -11,7 +12,255 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import logo from "@/assets/logo.png";
 
+// Product list for dropdown
+const productOptions = [
+  { name: "ถ้วยเบเกอรี่ PET 2 ออนซ์ ปาก 62 พร้อมฝา ทรงสูง (Pack 2,000 set)", code: "S1103026A005" },
+  { name: "ถ้วยเบเกอรี่ PET 2 ออนซ์ ปาก 62 พร้อมฝา ทรงเตี้ย (Pack 2,000 set)", code: "S1103026A006" },
+  { name: "ถ้วยเบเกอรี่ PET 3 ออนซ์ ปาก 75 พร้อมฝา (Pack 2,000 set)", code: "S1103037A000" },
+  { name: "Lid Tub&Tub V 1000 ml.PP.Microwave(Pack Tube)(N)(Barcode)(Pack 250 set)", code: "S1104100M010" },
+  { name: "Lid Tub&Tub F 1000 ml. PP.Microwave(Pack Tube)(N)(Barcode)(Pack Tube)", code: "S1104100M012" },
+  { name: "Lid Tub&Tub K 1000 ml.PP.Microwave (Pack Tube)(Barcode)(Pack 250 Set)(New)", code: "S1104100M013" },
+  { name: "Lid Tub&Tub Inner& Tub K 1000 ml.PP.Microwave (Pack Tube)(Barcode)(Pack 250 Set)(New)", code: "S1104100M015" },
+  { name: "Lid Tub & Tub V 500 ml. PET(Pack Tube)(Bar Code)Pack 250 Set", code: "S1104500A001" },
+  { name: "Lid Tub&Tub F 500 ml.PP.Microwave (Pack Tube)(Barcode)(Pack 250 Set)(New)", code: "S1104500M007" },
+  { name: "Lid Tub&Tub V 500 ml.PP.Microwave (Pack Tube)(Barcode)(Pack 250 Set)(New)", code: "S1104500M009" },
+  { name: "Lid Tub&Tub K 500 ml.PP.Microwave (Pack Tube)(Barcode)(Pack 250 Set)(New)", code: "S1104500M010" },
+  { name: "Lid Tub & Tub V 750 ml. PP Microwave (Pack Tube)(Barcode)(Pack 250 set)", code: "S1104750M001" },
+  { name: "Lid Tub & Tub F 750 ml. PP.Microwave(Pack Tube)(Barcode)(Pack 250 Set)", code: "S1104750M003" },
+  { name: "BOWL 13 OZ. D.118 PP & LID (MICROWAVE) (PACK 500 SETS) (BARCODE)", code: "S1108118M001" },
+  { name: "Bowl Outer D165 PET & LID (Bar Code)Pack 250 Set", code: "S1108165A004" },
+  { name: "Bowl Inner & Outer D165 PET & LID (Bar Code)Pack 250 Set(New)", code: "S1108165A006" },
+  { name: "Bowl Outer D165 PP & LID (microwave)(Pack Tube)(Bar Code)Pack 250 Set", code: "S1108165M004" },
+  { name: "Bowl Inner & Outer D165 PP & LID (microwave)(Pack Tube)(Bar Code)(250Set)", code: "S1108165M005" },
+  { name: "Bowl Inner & Outer Black D.165 PP & LID (microwave)(Pack Tube)", code: "S1108165M007" },
+  { name: "Bowl Outer Black D.165 PP&LID (Microwave)(Pack Tube)(Pack 250 Set)", code: "S1108165M008" },
+  { name: "Bowl 450 ml. D.125 PP & LID (microwave) (Bar Code)Pack 500 Set", code: "S1108450M002" },
+  { name: "Bowl 450 ml. D.125 PP & LID (microwave) (Nologo)Pack 500 Set", code: "S1108450M003" },
+  { name: "ชามกลมใส PP Microwave 450 ml. พร้อมฝา", code: "S1108450M004" },
+  { name: "ชามเพชรดำ 750 ml. (NB) & Inner พร้อมฝา (Pack Tube)(Barcode)(250 set)", code: "S1108750M001" },
+  { name: "ชามเพชรดำ 750 ml. (NB) พร้อมฝา (Pack Tube)(Barcode)(250 set)", code: "S1108750M003" },
+  { name: "ชามเพชรแดง 750 ml. (NB) & Inner พร้อมฝา (Pack Tube)(Barcode)(250 set)", code: "S1108750M005" },
+  { name: "ชามเพชรแดง 750 ml. (NB) พร้อมฝา (Pack Tube)(250 set)", code: "S1108750M006" },
+  { name: "แก้ว All Select 16OZ.", code: "S1202169A004" },
+  { name: 'SD 22 oz. D.98 "Coffee A Day"(BCR) PET+LID Dome 98 (H25)(PET)(Nologo)(Pack Tube)(Pack 500 set)', code: "S1202229A013" },
+  { name: "แก้ว All Select 22OZ.", code: "S1202229A022" },
+  { name: "SD 2.5 OZ. D.57 PP (PACK TUBE)", code: "F1102025P001" },
+  { name: 'SD 7 OZ. "PET" แก้ว (PET) 7 ออนซ์ (แปะป้ายภาษาไทย)(Pack Tube)(Barcode)', code: "F1102070A009" },
+  { name: "แก้ว PET 7 ออนซ์ ปาก 78", code: "F1102070A018" },
+  { name: "SD 9 OZ. (PET) PACK TUBE", code: "F1102090A000" },
+  { name: "แก้ว PET 9 ออนซ์ ปาก 78", code: "F1102090A006" },
+  { name: "แก้ว PET 12 ออนซ์ ปาก 85 ทรงจรวด", code: "F1102128A005" },
+  { name: "SD 12 OZ. D.90 -A (4Step)(Pack Tube)(Barcode)", code: "F1102129A005" },
+  { name: "SD 12 Oz. D92 PET (14 Oz. D92) (Pack Tube)(No Logo)", code: "F1102129A009" },
+  { name: "SD 12 oz.D.98 PET- CAPSULE (PACK TUBE)(BARCODE)", code: "F1102129A014" },
+  { name: "SD 14 Oz. D92 PLA (Pack Tube)", code: "F1102129H002" },
+  { name: "SD 12 Oz. D.92 (SD 14 Oz. D.92) BIO-PET (Pack Tube)", code: "F1102129O001" },
+  { name: "แก้ว PP 12 ออนซ์ ปาก95 (New)", code: "F1102129P004" },
+  { name: "แก้ว PP 12 ออนซ์ ปาก95 ทรงแคปซูล(AFT)(Pack Tube)(ถุงพิมพ์)", code: "F1102129P011" },
+  { name: "แก้ว PET 14 ออนซ์ ปาก 92 (Barcode)", code: "F1102149A006" },
+  { name: 'SD 16 Oz. (Emboss recycle mark Japanese & S. Korean language) D.98 PET-A (Pack Tube)', code: "F1102169A029" },
+  { name: "แก้ว PET 16 ออนซ์ ปาก98 ทรงแกปเลอร์", code: "F1102169A069" },
+  { name: "แก้ว PET 16 ออนซ์ ปาก 98 ทรงแคปซูล", code: "F1102169A070" },
+  { name: "แก้ว PET 16 ออนซ์ ปาก 95", code: "F1102169A071" },
+  { name: 'SD 16 OZ. D.98 PET-A (Pack Tube)-(TEA)', code: "F1102169A074" },
+  { name: "แก้ว PET 16 ออนซ์ ปาก98 ทรงแกปเลอร์ (Pack Tube)(Emboss BIO-ECO)", code: "F1102169A083" },
+  { name: 'SD 16 OZ. "PLA" D.98 (Pack Tube)', code: "F1102169H002" },
+  { name: "SD 16 Oz. D98 PLA-Cpasule (Pack Tube)", code: "F1102169H014" },
+  { name: 'SD 16 OZ. "PLA" D.98 (Pack Tube)(Nologo)', code: "F1102169H022" },
+  { name: 'SD 16 OZ. "PLA" D.98 (Pack Tube)(Emboss BIO-ECO)', code: "F1102169H034" },
+  { name: "SD 16 Oz. D98 Bio PET (Pack Tube)(Barcode)", code: "F1102169O004" },
+  { name: "แก้ว PP 16 ออนซ์ ปาก95", code: "F1102169P010" },
+  { name: "แก้ว PP 16 ออนซ์ ปาก95 (New)(AFT)(Pack Tube)(ถุงพิมพ์)", code: "F1102169P015" },
+  { name: "แก้ว PP 16 ออนซ์ ปาก 95 ทรงแคปซูล (AFT)(Pack Tube)(ถุงพิมพ์)", code: "F1102169P017" },
+  { name: "SD 18 Oz. D98 PET-Capsule (Pack Tube)(No Logo)", code: "F1102189A012" },
+  { name: "แก้ว PET 18 ออนซ์ ปาก95", code: "F1102189A016" },
+  { name: "แก้ว PET 18 ออนซ์ ปาก 98 ทรงแคปซูล", code: "F1102189A017" },
+  { name: "SD 18 Oz. D98 Bio PET-Capsule (Pack Tube)(Barcode)", code: "F1102189O000" },
+  { name: "SD 18 Oz. D98 Bio PET-Capsule (Pack Tube)(No Logo)", code: "F1102189O002" },
+  { name: "แก้ว PP 18 ออนซ์ ปาก95 ทรงแคปซูล", code: "F1102189P002" },
+  { name: "แก้ว PP 18 ออนซ์ ปาก95 ทรงแคปซูล(AFT)(Pack Tube)(ถุงพิมพ์)", code: "F1102189P004" },
+  { name: "แก้ว PET 20 ออนซ์ ปาก 98 ทรงแคปซูล", code: "F1102209A013" },
+  { name: "แก้ว PET 20 ออนซ์ ปาก 98 (Barcode)", code: "F1102209A016" },
+  { name: "SD 20 Oz. D98 PLA (Pack Tube)", code: "F1102209H003" },
+  { name: "แก้ว PP 20 ออนซ์ ปาก95 ทรงแคปซูล", code: "F1102209P003" },
+  { name: "แก้ว PP 20 ออนซ์ ปาก95 (New)", code: "F1102209P008" },
+  { name: "แก้ว PP 20 ออนซ์ ปาก95 ทรงแคปซูล(AFT)(Pack Tube)(ถุงพิมพ์)", code: "F1102209P011" },
+  { name: "แก้ว PP 20 ออนซ์ ปาก95 (New)(AFT)(Pack Tube)(ถุงพิมพ์)", code: "F1102209P013" },
+  { name: "SD 22 Oz. D98 Pet (BCR) (Pack Tube)(Barcode)", code: "F1102229A014" },
+  { name: "SD 22 oz. D98 PET-Capsule (Pack Tube)(Barcode)", code: "F1102229A027" },
+  { name: "แก้ว PET 22 ออนซ์ ปาก 98 ทรงBCR", code: "F1102229A040" },
+  { name: "SD 22 Oz. D98 Pet (BCR) (Pack Tube)-(TEA)", code: "F1102229A049" },
+  { name: "SD 22 oz. D.98 BCR (BIO PET)(Pack Tube)", code: "F1102229O010" },
+  { name: "SD 22 oz. D.98 BCR (BIO PET)(Pack Tube)-(CPPC)", code: "F1102229O013" },
+  { name: "แก้ว PP 22 ออนซ์ ปาก95 (New)", code: "F1102229P009" },
+  { name: "แก้ว PP 22 ออนซ์ ปาก95 ทรงแคปซูล", code: "F1102229P013" },
+  { name: "แก้ว PP 22 ออนซ์ ปาก95 ทรงแคปซูล(AFT)(Pack Tube)(ถุงพิมพ์)", code: "F1102229P018" },
+  { name: "ถ้วยเบเกอรี่ PET 1 ออนซ์ ฝาติด (Pack 2,000 pcs.)", code: "F1103010A003" },
+  { name: "Cup 1.5 oz. PET-Switch (Pack Tube)(Barcode)", code: "F1103015A001" },
+  { name: "ถ้วยเบเกอร์ PET 1.5 ออนซ์ ฝาติด (Pack 2,000 pcs.)", code: "F1103015A002" },
+  { name: "ถ้วยเบเกอรี่ PET 3 ออนซ์ ปาก 78(Pack Tube)(Barcode)", code: "F1103037A003" },
+  { name: "Cup 3 oz. D.75 PET (Pack Tube)(Barcode)", code: "F1103037A006" },
+  { name: "BK 3 OZ. D.78 PET (Pack Tube) For CP Ram", code: "F1103037A010" },
+  { name: "ถ้วยเบเกอรี่ PET 4.7 ออนซ์ ปาก 78", code: "F1103047A005" },
+  { name: "ถ้วยเบเกอรี่ PET 8 ออนซ์ ปาก 78", code: "F1103087A005" },
+  { name: "ถ้วยเบเกอรี่ PET 10 ออนซ์ ปาก 95(แปะป้ายภาษาไทย)", code: "F1103109A010" },
+  { name: "ถ้วยเบเกอรี่ PET 10 ออนซ์ ปาก 90", code: "F1103109A011" },
+  { name: "ถ้วยเบเกอรี่ PET 12 ออนซ์ ปาก 95(แปะป้ายภาษาไทย)", code: "F1103129A004" },
+  { name: "Fruit Tub 500 g. PET (Pack Tube)(Barcode)", code: "F1104500A007" },
+  { name: "Lid Cup D.75 PET (Pack Tube)(Barcode)", code: "F1105075A001" },
+  { name: "ฝาโดม PET ปาก 78 (ไม่เจาะรู)", code: "F1105078A016" },
+  { name: "ฝาเรียบ PET ปาก 78 (ไม่เจาะรู)", code: "F1105078A017" },
+  { name: "LID COFFEE PS D.79 (Pack Tube)", code: "F1105079W000" },
+  { name: "LID COFFEE PS D.79 (Pack Tube)-(KUDSAN)", code: "F1105079W003" },
+  { name: "LID SD 12 OZ. DOME D.90 (Pack Tube)(Barcode)", code: "F1105090A006" },
+  { name: "LID SD 12 OZ. DOME D.90 (H-25) (Pack Tube)(Barcode)", code: "F1105090A009" },
+  { name: "LID FLAT D.90 (PET) ฝาเรียบ (PET) ปาก 90 (ไม่เจาะรู)-(R) (แปะป้ายภาษาไทย)(Pack Tube)(Barcode)", code: "F1105090A013" },
+  { name: "LID FLAT D.90 (PET) ฝาเรียบ (PET) ปาก 90 เจาะกากบาท X18-(R) (แปะป้ายภาษาไทย)(Pack Tube)(Barcode)", code: "F1105090A015" },
+  { name: "ฝายกดื่ม (1x600)", code: "F1105090A020" },
+  { name: "ฝาเรียบ PET ปาก 90 (ไม่เจาะรู)", code: "F1105090A021" },
+  { name: "Lid Dome D90 PLA (H25)(Pack Tube)", code: "F1105090H000" },
+  { name: "Lid Flat D92 PET (X22)-R (Pack Tube)(Barcode)", code: "F1105092A000" },
+  { name: "Lid Dome D92 PET (H25)(Pack Tube)(Barcode)", code: "F1105092A003" },
+  { name: "ฝาเรียบ PET ปาก 92 (เจาะรูกากบาท 22 mm.)(New)", code: "F1105092A006" },
+  { name: "ฝาไม่ใช้หลอด D.92 (PET)(แบบยกดื่ม)(Pack Tube)(Barcode)", code: "F1105092A008" },
+  { name: "ฝายกดื่ม (รูเล็ก)(nana) ปาก92 PET", code: "F1105092A012" },
+  { name: "ฝาฮาฟ PET ปาก 92 (เจาะรู 18 mm.)#ใส่ถุงพิมพ์", code: "F1105092A020" },
+  { name: "Lid Dome D92 PLA (H25)(Pack Tube)", code: "F1105092H001" },
+  { name: "Lid Flat D92 PLA-R (H18)(Pack Tube)", code: "F1105092H002" },
+  { name: "Lid Dome D92 PLA (H25)(Pack Tube)", code: "F1105092H003" },
+  { name: "Lid Flat D92 PLA-R (H18)(Pack Tube)(Nologo)-(Bio-Eco)", code: "F1105092H008" },
+  { name: "Lid Flat D.92 Bio PET (H18) (Pack Tube)", code: "F1105092O000" },
+  { name: "LID DOME D.92 BIO PET (H25)(Pack Tube)", code: "F1105092O001" },
+  { name: "ฝาไม่ใช้หลอด D.92 (BIO PET)(แบบยกดื่ม)(Pack Tube)(Barcode)", code: "F1105092O003" },
+  { name: "ฝายกดื่ม (รูเล็ก)(nana) ปาก92 BIO PET", code: "F1105092O004" },
+  { name: "LID FLAT D.95 ฝาเรียบ (PET) ปาก 95 (ไม่เจาะรู)-(R) (แปะป้ายภาษาไทย)(Pack Tube)(Barcode)", code: "F1105095A000" },
+  { name: "LID FLAT D.95 ฝาเรียบ (PET) ปาก 95 เจาะกากบาท X25 -(R)(แปะป้ายภาษาไทย)(Pack Tube)(Barcode)", code: "F1105095A001" },
+  { name: "Lid Half Dome (C18) D.95 (PET)-P (Pack Tube)(Barcode)", code: "F1105095A004" },
+  { name: "Lid Half Dome (C18) D.95 (PET)-P (Pack Tube)(Chesters V.2)", code: "F1105095A006" },
+  { name: "ฝาฮาฟ PET ปาก 95 (เจาะรู 18 mm.) ปิดแก้ว PP (Nologo)", code: "F1105095A007" },
+  { name: "ฝาฮาฟวิปครีม PET ปาก95", code: "F1105095A008" },
+  { name: "Lid Capsule D98 PET (Pack Tube)", code: "F1105098A004" },
+  { name: "Lid Capsule D98 PET (Pack Tube)(Barcode)", code: "F1105098A005" },
+  { name: "ฝาไม่ใช้หลอด D.98 PET (แบบยกดื่ม)(Pack Tube)", code: "F1105098A008" },
+  { name: 'LID SD D.98 DOME (PET)(H25)(Pack Tube)(ARIGATO)', code: "F1105098A013" },
+  { name: "LID Flat D.98 (PET) (X-25)-R (Pack Tube) (No Logo)", code: "F1105098A028" },
+  { name: "ฝาฮาฟ PET ปาก 98 (เจาะรู 18 mm.)", code: "F1105098A043" },
+  { name: "ฝายกดื่ม PET ปาก 98", code: "F1105098A044" },
+  { name: "ฝาเรียบ PET ปาก 98 (เจาะรูกากบาท 25 mm.)", code: "F1105098A045" },
+  { name: "Sip Lid D.98 PET (Pack Tube)(Barcode)", code: "F1105098A051" },
+  { name: "ฝายกดื่ม PET ปาก 98 (Pack tube)-(TEA)", code: "F1105098A056" },
+  { name: "ฝายกดื่ม PET ปาก 98 (Nologo)-(Bio-Eco)", code: "F1105098A057" },
+  { name: "ฝาฮาฟ PET ปาก 98 (เจาะรู 18 mm.)-( Shiba Hokkaido Milktea)", code: "F1105098A058" },
+  { name: "ฝายกดื่ม (รูเล็ก) ปาก 98 PET (ถุงพิมพ์)", code: "F1105098A060" },
+  { name: "Lid Capsule D98 PET (Pack Tube) For CP Ram", code: "F1105098A082" },
+  { name: "ฝาไม่ใช้หลอด D.98 PLA (แบบเปิดได้)(Pack Tube)(Barcode)", code: "F1105098H000" },
+  { name: "ฝาไม่ใช้หลอด D98 PLA (แบบยกดื่ม)(Pack Tube)(Barcode)", code: "F1105098H004" },
+  { name: "ฝาไม่ใช้หลอด D98 PLA (แบบยกดื่ม)(Pack Tube)(Nologo)", code: "F1105098H013" },
+  { name: "ฝายกดื่ม PLA ปาก 98 (Nologo) (Bio-Eco)", code: "F1105098H015" },
+  { name: "Lid Dome D.98 Bio PET (Pack Tube)(H25)(No Logo)", code: "F1105098O000" },
+  { name: "Lid Dome D.98 Bio PET (Pack Tube)(H25)(Barcode)", code: "F1105098O002" },
+  { name: "ฝาไม่ใช้หลอด D.98 (BIO PET)(แบบยกดื่ม)(Pack Tube)(Barcode)", code: "F1105098O004" },
+  { name: "LID FLAT D.98 (BIO PET) ( X-25) (Pack Tube)", code: "F1105098O006" },
+  { name: "LID SD D.98 DOME (PET) (PACK TUBE) (H25)(Barcode)", code: "F1105169A019" },
+  { name: "LID SD D.98 DOME (PET) (PACK TUBE) (H25)", code: "F1105169A021" },
+  { name: "ฝาไม่ใช้หลอด D.98 PET(แบบเปิดได้)(Pack Tube)", code: "F1105169A027" },
+  { name: "ฝาเรียบ PET ปาก 95 (ไม่เจาะรู)", code: "F1105169A040" },
+  { name: "ฝาโดม PET ปาก 98 (เจาะรู 25 mm.)", code: "F1105169A041" },
+  { name: "ฝาโดม PET ปาก 95 (เจาะรู 25 mm.)", code: "F1105169A042" },
+  { name: "ฝาเปิดปิด PET ปาก 98", code: "F1105169A043" },
+  { name: "ฝาโดม PET ปาก 95 (ไม่เจาะรู)", code: "F1105169A044" },
+  { name: "LID DOME D98 PET (X-25)(Pack Tube)", code: "F1105169A045" },
+  { name: "ฝาโดม PET ปาก 95 (เจาะรู 25 mm.) (ปิดแก้วPP)", code: "F1105169A046" },
+  { name: "Lid Flat D98 PLA-R (H18)(Pack Tube)", code: "F1105169H009" },
+  { name: "Lid Flat D98 PLA-R (H18)(Pack Tube)(Nologo)(Bio-Eco)", code: "F1105169H017" },
+  { name: "ฝาโดม PLA ปาก 98 (H25) (Nologo) (Bio-Eco)", code: "F1105169H018" },
+  { name: 'DISH 8 "', code: "F1107080W000" },
+  { name: 'DISH 9 "', code: "F1107090W000" },
+  { name: "BOWL 13 OZ. D.118 PP MICROWAVE (PACK TURE)", code: "F1108118M001" },
+  { name: "Bowl Outer D165 PET (Pack Tube)", code: "F1108165A006" },
+  { name: "Bowl Inner D.165 PP (microwave) (Pack Tube)", code: "F1108165M010" },
+  { name: "Bowl Inner D.165 PP (Oishi) (microwave) (Pack Tube)", code: "F1108165M013" },
+  { name: "inner ชามเพชร 750 ml. (NB)", code: "F1108165M016" },
+  { name: "Bowl 450 ml. D125 PET (Pack Tube)", code: "F1108450A002" },
+  { name: "ชามเพชรแดง 750 ml.(NB)", code: "F1108750M004" },
+  { name: "ชามเพชรดำ 750 ml. (NB)", code: "F1108750M005" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.D.92) "Dean&Deluca -STD"PET (Pack Tube)(Nologo)', code: "F1202129A019" },
+  { name: 'SD 12 oz.D.98 PET- CAPSULE "TenTen" (PACK TUBE)', code: "F1202129A034" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.) "Bake A Wish"PET (Pack Tube)(Nologo)', code: "F1202129A044" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.) "KTB x dean&deluca" PET (Pack Tube)(Nologo)', code: "F1202129A048" },
+  { name: 'SD 12 OZ. (14 Oz.) D.92 "qraft" PET (HW)(Pack Tube)', code: "F1202129A049" },
+  { name: 'SD 12 OZ. (14 Oz.) D.92 "PEACE" PET (HW)(Pack Tube)', code: "F1202129A050" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.) "HARUDOT" PET (Pack Tube)(Nologo)', code: "F1202129A053" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.) "smouchee" PET (Pack Tube)(Nologo)', code: "F1202129A071" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.) "GATTA" PET (Pack Tube)(Nologo)', code: "F1202129A082" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.) "GRAIN" PET (Pack Tube)(Nologo)', code: "F1202129A083" },
+  { name: 'SD 12 oz.D.98 PET-Capsule "กระทรวงการคั่ว" (PACK TUBE)', code: "F1202129A086" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.) "ตื่นเจริญ" PET (Pack Tube)(Nologo)', code: "F1202129A095" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.D.92) "NANA COFFEE ROASTERS "BIO-PET (Pack Tube)', code: "F1202129O011" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.D.92) "ลาย1แมวกวัก" BIO-PET (Pack Tube)', code: "F1202129O016" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.D.92) "ลาย2แมวแลบลิ้น" BIO-PET (Pack Tube)', code: "F1202129O017" },
+  { name: 'SD 12 OZ.D.92 (14 OZ.D.92) "LOFTER V.2"BIO-PET (Pack Tube)', code: "F1202129O018" },
+  { name: 'SD 12 oz. D.95 PP ทรงแคปซูล "Heng Pang Pua" (Pack Tube)', code: "F1202129P004" },
+  { name: 'SD 16 Oz. "COFFEE TEA" D98 PET-A (Pack Tube)', code: "F1202169A205" },
+  { name: 'SD 16 OZ.D.98 "Dean&Deluca-STD" PET (Pack Tube)(A)', code: "F1202169A259" },
+  { name: 'SD 16 OZ. D.98 "Cafe\'@chiang Mai V.2" PET-A (Pack Tube)', code: "F1202169A275" },
+  { name: 'SD 16 OZ. D.98 "กระทรวงการคั่ว" PET-A (Pack Tube)', code: "F1202169A276" },
+  { name: 'SD 16 OZ.D.98 "ADDICT V.2" PET-A (Pack Tube)', code: "F1202169A317" },
+  { name: 'SD 16 oz. D.98 "ARIGATO" PET -A (Pack Tube)(Barcode)(Black)', code: "F1202169A342" },
+  { name: 'SD 16 oz. D98 PET-A "The Three Little Pigs Farm"(Pack Tube)', code: "F1202169A387" },
+  { name: 'SD 16 OZ. D.98 "Bake A Wish" PET-A (Pack Tube)', code: "F1202169A451" },
+  { name: 'SD 16 OZ. D.98 PET-A "Shiba"(Pack Tube)-(Shiba)', code: "F1202169A477" },
+  { name: 'SD 16 oz.D.98 PET-A (HW)"CASA LAPIN" (Pack Tube)', code: "F1202169A479" },
+  { name: 'SD 16 OZ. D.98 PET-A "coco kof" (Pack Tube)', code: "F1202169A489" },
+  { name: 'SD 16 Oz. D.98 PET-Capsule "Santan Cafe V.2" (Pack 25 pcs.)', code: "F1202169A493" },
+  { name: 'SD 16 OZ. D.98 PET-A "rakun cha" (Pack Tube)', code: "F1202169A494" },
+  { name: 'SD 16 OZ. D.98 PET-A "GATTA" (Pack Tube)', code: "F1202169A533" },
+  { name: 'SD 16 Oz. D98 PET-A "ลูกเป็ดขี้เหร่"(Pack Tube)', code: "F1202169A541" },
+  { name: 'SD 16 oz. D98 PET-A "Pasta Ama" V.2 (Pack Tube)', code: "F1202169A557" },
+  { name: 'SD 16 oz.D.98 PET-A (HW)"ส้มตำไทยไข่เค็ม" (Pack Tube)', code: "F1202169A559" },
+  { name: 'SD 16 Oz. D98 PET-A "STITCH&HAMMER-สีน้ำเงิน"(PACK TUBE)', code: "F1202169A568" },
+  { name: 'SD 16 oz.D.98 PET-A (HW)"ส้มตำไทยไข่เค็ม V.4" (Pack Tube)', code: "F1202169A589" },
+  { name: 'SD 16 oz. D98 PET-A "Carousel V.2"(Pack Tube)', code: "F1202169A590" },
+  { name: 'SD 16 oz.D.98 PET-A (HW)"ส้มตำไทยไข่เค็ม -โรงงานชลบุรี" (Pack Tube)', code: "F1202169A591" },
+  { name: 'SD 16 oz.D.98 PET-A (HW)"ส้มตำไทยไข่เค็ม -โรงงานขอนแก่น" (Pack Tube)', code: "F1202169A592" },
+  { name: 'SD 16 oz.D.98 PET-A (HW)"ส้มตำไทยไข่เค็ม -โรงงานลำพูน" (Pack Tube)', code: "F1202169A593" },
+  { name: 'SD 16 oz.D.98 PET-A (HW)"ส้มตำไทยไข่เค็ม -โรงงานสุราษฏร์ธานี" (Pack Tube)', code: "F1202169A594" },
+  { name: 'SD 16 Oz. D.98 PET-A "Hokkaido V.3"(Pack Tube)', code: "F1202169A600" },
+  { name: 'SD 16 oz.D.98 PET-A (HW)"Coffee & Cream V.2" (Pack Tube)', code: "F1202169A601" },
+  { name: 'SD 16 OZ. "Star Coffee-New Logo V.3" PLA D.98 (Pack Tube)', code: "F1202169H071" },
+  { name: 'SD 16 OZ. D.98 "ME CAFE V.2" BIO PET-A (Pack Tube)', code: "F1202169O033" },
+  { name: 'SD 16 Oz. D98 Bio PET-A "Happi Tiny"(Pack Tube)', code: "F1202169O041" },
+  { name: 'SD 16 Oz. D98 Bio PET-A "ลาย1แมวกวัก"(Pack Tube)', code: "F1202169O049" },
+  { name: 'SD 16 Oz. D98 Bio PET-A "ลาย2แมวแลบลิ้น"(Pack Tube)', code: "F1202169O050" },
+  { name: 'SD 16 OZ. D.95 PP "ล้านนม V.2" (NEW)(Pack Tube)', code: "F1202169P018" },
+  { name: 'SD 16 Oz. D.95 PP Capsule "momo yogurt"(Pack Tube)', code: "F1202169P024" },
+  { name: 'SD 16 Oz. D.95 PP Capsule "โครตปั่น"V.2(Pack Tube)', code: "F1202169P025" },
+  { name: 'SD 16 Oz. D.95 PP Capsule "cocowalk V.2"(Pack Tube)(nologo)', code: "F1202169P033" },
+  { name: 'SD 16 OZ. D.95 PP "มวลชล cafe V.2" (NEW)(Pack Tube)', code: "F1202169P034" },
+  { name: 'SD 18 Oz. D98 PLA Capsule "กาแฟชายทุ่ง" (Pack Tube)', code: "F1202189H000" },
+  { name: 'SD 18 OZ. D.95 PP Capsule "COCO MONKEY" (Pack Tube)', code: "F1202189P002" },
+  { name: 'SD 20 oz. D.98 "Adam muslim food"PET (Pack Tube)', code: "F1202209A012" },
+  { name: 'SD 20 Oz. D.95 PP CAPSULE "โคตรปั่น"(Pack Tube)', code: "F1202209P002" },
+  { name: 'SD 22 oz.(BCR) D.98 PET "ARIGATO" (Pack Tube)(Barcode)(Black)', code: "F1202229A063" },
+  { name: 'SD 22 oz. D.98 "Dean&Deluca V.2"(BCR)(PET)(Pack tube)', code: "F1202229A099" },
+  { name: 'SD 22 oz. D.98 "Dunkin"(BCR)(PET)(Pack tube)(Nologo)(Emboss BIO-ECO)', code: "F1202229A132" },
+  { name: 'SD 22 oz. D.98 "ลุงเงินกาแฟหม้อดิน" (PET)(BCR)(Pack Tube)', code: "F1202229A133" },
+  { name: 'SD 22 OZ. D.98 "Star Coffee-New Logo V.3" (PLA) (PACK TUBE)(Pack 960 pcs.)', code: "F1202229H026" },
+  { name: 'SD 22 oz. D.98 PLA (BCR) "กาแฟชายทุ่ง" (Pack Tube)', code: "F1202229H035" },
+  { name: 'SD 22 Oz. D.95 PP CAPSULE "Majime"(Pack Tube)', code: "F1202229P022" },
+  { name: 'SD 22 oz. D.95 PP "BOOM BOOM TEA"(NEW) (Pack Tube)', code: "F1202229P023" },
+];
+
 interface OrderItem {
+  ps: boolean;
+  pp: boolean;
+  pet: boolean;
+  pla: boolean;
+  hotFood: boolean;
+  normalTemp: boolean;
+  coldTemp: boolean;
+  freezeTemp: boolean;
+  otherUsage: boolean;
   productType: string;
   size: string;
   details: string;
@@ -41,6 +290,15 @@ const OrderForm = () => {
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
     {
+      ps: false,
+      pp: false,
+      pet: false,
+      pla: false,
+      hotFood: false,
+      normalTemp: false,
+      coldTemp: false,
+      freezeTemp: false,
+      otherUsage: false,
       productType: "",
       size: "",
       details: "",
@@ -58,6 +316,7 @@ const OrderForm = () => {
   ]);
 
   const [signature, setSignature] = useState("");
+  const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
 
   const handleDownloadPDF = async () => {
     if (!formRef.current) return;
@@ -91,6 +350,15 @@ const OrderForm = () => {
     setOrderItems([
       ...orderItems,
       {
+        ps: false,
+        pp: false,
+        pet: false,
+        pla: false,
+        hotFood: false,
+        normalTemp: false,
+        coldTemp: false,
+        freezeTemp: false,
+        otherUsage: false,
         productType: "",
         size: "",
         details: "",
@@ -241,7 +509,7 @@ const OrderForm = () => {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 bg-white z-50" align="start">
                   <Calendar
                     mode="single"
                     selected={formData.date}
@@ -276,7 +544,7 @@ const OrderForm = () => {
                   </th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>ชนิดสินค้า</th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-40" rowSpan={3}>รายละเอียด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-48" rowSpan={3}>รายละเอียด</th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
                     <div>จำนวนการสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
@@ -321,35 +589,43 @@ const OrderForm = () => {
                   <th className="border border-black p-1 text-center font-normal w-8">PLA</th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        ใส่ของร้อน(ที่อุณหภูมิ 45 - 70 C°)
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">ใส่ของร้อน</span>
+                        <span className="block">(ที่อุณหภูมิ</span>
+                        <span className="block">45 - 70 C°)</span>
                       </span>
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        ที่อุณหภูมิปกติ(ที่อุณหภูมิ 25 C°)
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">ที่อุณหภูมิปกติ</span>
+                        <span className="block">(ที่อุณหภูมิ</span>
+                        <span className="block">25 C°)</span>
                       </span>
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        ที่อุณหภูมิแช่เย็น(ที่อุณหภูมิ 0 - 10 C°)
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">ที่อุณหภูมิแช่เย็น</span>
+                        <span className="block">(ที่อุณหภูมิ</span>
+                        <span className="block">0 - 10 C°)</span>
                       </span>
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        ที่อุณหภูมิแช่แข็ง(ที่อุณหภูมิ -1 ถึง -80 C°)
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">ที่อุณหภูมิแช่แข็ง</span>
+                        <span className="block">(ที่อุณหภูมิ</span>
+                        <span className="block">-1 ถึง -80 C°)</span>
                       </span>
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                      <span className="text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
                         อื่นๆ
                       </span>
                     </div>
@@ -360,33 +636,38 @@ const OrderForm = () => {
                     <div>(ระบุ)</div>
                   </th>
                 </tr>
-                {/* Row 3: Temperature descriptions (rotated) */}
+                {/* Row 3: Temperature descriptions (rotated with line breaks) */}
                 <tr>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        (อุณหภูมิสูงสุดที่ -20 C° ถึง 80 C°)
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">(อุณหภูมิสูงสุดที่</span>
+                        <span className="block">-20 C° ถึง 80 C°)</span>
                       </span>
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        (อุณหภูมิสูงสุดที่ -10 C° ถึง 100 C°/120 C°(M))
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">(อุณหภูมิสูงสุดที่</span>
+                        <span className="block">-10 C° ถึง</span>
+                        <span className="block">100 C°/120 C°(M))</span>
                       </span>
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        (อุณหภูมิสูงสุดที่ -10 C° ถึง 70 C°)
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">(อุณหภูมิสูงสุดที่</span>
+                        <span className="block">-10 C° ถึง 70 C°)</span>
                       </span>
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      <span className="whitespace-nowrap text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        (อุณหภูมิสูงสุดที่ 0 C° ถึง 50 C°)
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">(อุณหภูมิสูงสุดที่</span>
+                        <span className="block">0 C° ถึง 50 C°)</span>
                       </span>
                     </div>
                   </th>
@@ -395,15 +676,78 @@ const OrderForm = () => {
               <tbody>
                 {orderItems.map((item, index) => (
                   <tr key={index}>
-                    <td className="border border-black p-1 h-8 w-8"></td>
-                    <td className="border border-black p-1 h-8 w-8"></td>
-                    <td className="border border-black p-1 h-8 w-8"></td>
-                    <td className="border border-black p-1 h-8 w-8"></td>
-                    <td className="border border-black p-1 h-8"></td>
-                    <td className="border border-black p-1 h-8"></td>
-                    <td className="border border-black p-1 h-8"></td>
-                    <td className="border border-black p-1 h-8"></td>
-                    <td className="border border-black p-1 h-8"></td>
+                    <td className="border border-black p-1 h-8 w-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.ps}
+                        onChange={(e) => updateOrderItem(index, "ps", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
+                    <td className="border border-black p-1 h-8 w-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.pp}
+                        onChange={(e) => updateOrderItem(index, "pp", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
+                    <td className="border border-black p-1 h-8 w-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.pet}
+                        onChange={(e) => updateOrderItem(index, "pet", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
+                    <td className="border border-black p-1 h-8 w-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.pla}
+                        onChange={(e) => updateOrderItem(index, "pla", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
+                    <td className="border border-black p-1 h-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.hotFood}
+                        onChange={(e) => updateOrderItem(index, "hotFood", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
+                    <td className="border border-black p-1 h-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.normalTemp}
+                        onChange={(e) => updateOrderItem(index, "normalTemp", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
+                    <td className="border border-black p-1 h-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.coldTemp}
+                        onChange={(e) => updateOrderItem(index, "coldTemp", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
+                    <td className="border border-black p-1 h-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.freezeTemp}
+                        onChange={(e) => updateOrderItem(index, "freezeTemp", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
+                    <td className="border border-black p-1 h-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.otherUsage}
+                        onChange={(e) => updateOrderItem(index, "otherUsage", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
                     <td className="border border-black p-1">
                       <Input
                         value={item.productType}
@@ -418,12 +762,52 @@ const OrderForm = () => {
                         className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
                       />
                     </td>
-                    <td className="border border-black p-1 w-40">
-                      <Input
-                        value={item.details}
-                        onChange={(e) => updateOrderItem(index, "details", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent w-full"
-                      />
+                    <td className="border border-black p-1 w-48">
+                      <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            role="combobox"
+                            aria-expanded={openDropdownIndex === index}
+                            className="w-full h-6 justify-between p-0 text-xs font-normal hover:bg-transparent truncate"
+                          >
+                            <span className="truncate text-left flex-1">{item.details || "เลือกรายละเอียด..."}</span>
+                            <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0 bg-white z-50" align="start">
+                          <Command>
+                            <CommandInput placeholder="ค้นหารายละเอียด..." className="h-9" />
+                            <CommandList>
+                              <CommandEmpty>ไม่พบรายการ</CommandEmpty>
+                              <CommandGroup className="max-h-[300px] overflow-auto">
+                                {productOptions.map((product) => (
+                                  <CommandItem
+                                    key={product.code}
+                                    value={`${product.name} ${product.code}`}
+                                    onSelect={() => {
+                                      updateOrderItem(index, "details", `${product.name} // ${product.code}`);
+                                      setOpenDropdownIndex(null);
+                                    }}
+                                    className="text-xs"
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-3 w-3",
+                                        item.details === `${product.name} // ${product.code}` ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span className="truncate">{product.name}</span>
+                                      <span className="text-muted-foreground text-[10px]">{product.code}</span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </td>
                     <td className="border border-black p-1">
                       <Input
@@ -467,7 +851,14 @@ const OrderForm = () => {
                         className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
                       />
                     </td>
-                    <td className="border border-black p-1"></td>
+                    <td className="border border-black p-1 text-center">
+                      <input
+                        type="checkbox"
+                        checked={item.thai}
+                        onChange={(e) => updateOrderItem(index, "thai", e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                    </td>
                     <td className="border border-black p-1">
                       <Input
                         value={item.lawRef}
@@ -498,7 +889,7 @@ const OrderForm = () => {
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
-                    <td className="border border-black p-1 w-40"></td>
+                    <td className="border border-black p-1 w-48"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
                     <td className="border border-black p-1"></td>
