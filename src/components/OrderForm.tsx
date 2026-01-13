@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Download, Plus, CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
+import { Download, Plus, CalendarIcon, Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,6 +11,23 @@ import { cn } from "@/lib/utils";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import logo from "@/assets/logo.png";
+
+// Format number with commas (no decimals)
+const formatQuantity = (value: string): string => {
+  const num = value.replace(/[^0-9]/g, '');
+  if (!num) return '';
+  return parseInt(num, 10).toLocaleString('en-US');
+};
+
+// Format number with commas and 2 decimal places
+const formatPrice = (value: string): string => {
+  const cleanValue = value.replace(/[^0-9.]/g, '');
+  if (!cleanValue) return '';
+  const parts = cleanValue.split('.');
+  const intPart = parts[0] ? parseInt(parts[0], 10).toLocaleString('en-US') : '0';
+  const decPart = parts[1] !== undefined ? parts[1].slice(0, 2).padEnd(2, '0') : '00';
+  return `${intPart}.${decPart}`;
+};
 
 // Size options for dropdown
 const sizeOptions = [
@@ -348,14 +365,25 @@ const OrderForm = () => {
   const [openSizeDropdownIndex, setOpenSizeDropdownIndex] = useState<number | null>(null);
   const [openProductTypeDropdownIndex, setOpenProductTypeDropdownIndex] = useState<number | null>(null);
 
+  const [isPdfMode, setIsPdfMode] = useState(false);
+
   const handleDownloadPDF = async () => {
     if (!formRef.current) return;
+
+    // Set PDF mode to hide checkboxes and dropdown arrows
+    setIsPdfMode(true);
+    
+    // Wait for state to update
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const canvas = await html2canvas(formRef.current, {
       scale: 2,
       useCORS: true,
       backgroundColor: "#ffffff",
     });
+
+    // Reset PDF mode
+    setIsPdfMode(false);
 
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({
@@ -546,11 +574,12 @@ const OrderForm = () => {
                   <th className="border border-black p-1 text-center align-middle font-normal" colSpan={5}>
                     คุณลักษณะการใช้งาน
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-14 min-w-14 max-w-14" rowSpan={3}>ชนิดสินค้า</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-20 min-w-20 max-w-20" rowSpan={3}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-50 min-w-50 max-w-50" rowSpan={3}>รายละเอียด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3}>ชนิดสินค้า</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3}>ขนาด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-60 min-w-60 max-w-60" rowSpan={3}>รายละเอียด</th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
-                    <div>จำนวนการสั่งซื้อ</div>
+                    <div>จำนวน</div>
+                    <div>การสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
                   </th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
@@ -573,15 +602,13 @@ const OrderForm = () => {
                     <div>กำหนด</div>
                   </th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
-                    <div>ประเ</div>
-                    <div>ทศ</div>
+                    <div>ประเทศ</div>
                     <div>ที่</div>
-                    <div>ส่งอ</div>
-                    <div>อก</div>
+                    <div>ส่งออก</div>
                   </th>
                   <th className="border border-black p-1 text-center align-middle font-normal" colSpan={2}>
-                    <div>กฎหมา</div>
-                    <div>ยอ้างอิง</div>
+                    <div>กฎหมาย</div>
+                    <div>อ้างอิง</div>
                   </th>
                   <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>หมายเหตุ</th>
                 </tr>
@@ -634,10 +661,20 @@ const OrderForm = () => {
                       </span>
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal text-[8px]" rowSpan={2}>ไทย</th>
-                  <th className="border border-black p-1 text-center font-normal text-[7px]" rowSpan={2}>
-                    <div>ต่างประเทศ</div>
-                    <div>(ระบุ)</div>
+                  <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
+                    <div className="h-16 flex items-center justify-center">
+                      <span className="text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        ไทย
+                      </span>
+                    </div>
+                  </th>
+                  <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
+                    <div className="h-16 flex items-center justify-center">
+                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                        <span className="block">ต่างประเทศ</span>
+                        <span className="block">(ระบุ)</span>
+                      </span>
+                    </div>
                   </th>
                 </tr>
                 {/* Row 3: Temperature descriptions (rotated with line breaks) */}
@@ -681,82 +718,121 @@ const OrderForm = () => {
                 {orderItems.map((item, index) => (
                   <tr key={index}>
                     <td className="border border-black p-1 h-8 w-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.ps}
-                        onChange={(e) => updateOrderItem(index, "ps", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.ps ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.ps}
+                          onChange={(e) => updateOrderItem(index, "ps", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1 h-8 w-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.pp}
-                        onChange={(e) => updateOrderItem(index, "pp", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.pp ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.pp}
+                          onChange={(e) => updateOrderItem(index, "pp", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1 h-8 w-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.pet}
-                        onChange={(e) => updateOrderItem(index, "pet", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.pet ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.pet}
+                          onChange={(e) => updateOrderItem(index, "pet", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1 h-8 w-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.pla}
-                        onChange={(e) => updateOrderItem(index, "pla", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.pla ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.pla}
+                          onChange={(e) => updateOrderItem(index, "pla", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1 h-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.hotFood}
-                        onChange={(e) => updateOrderItem(index, "hotFood", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.hotFood ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.hotFood}
+                          onChange={(e) => updateOrderItem(index, "hotFood", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1 h-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.normalTemp}
-                        onChange={(e) => updateOrderItem(index, "normalTemp", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.normalTemp ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.normalTemp}
+                          onChange={(e) => updateOrderItem(index, "normalTemp", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1 h-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.coldTemp}
-                        onChange={(e) => updateOrderItem(index, "coldTemp", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.coldTemp ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.coldTemp}
+                          onChange={(e) => updateOrderItem(index, "coldTemp", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1 h-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.freezeTemp}
-                        onChange={(e) => updateOrderItem(index, "freezeTemp", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.freezeTemp ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.freezeTemp}
+                          onChange={(e) => updateOrderItem(index, "freezeTemp", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1 h-8 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.otherUsage}
-                        onChange={(e) => updateOrderItem(index, "otherUsage", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.otherUsage ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.otherUsage}
+                          onChange={(e) => updateOrderItem(index, "otherUsage", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
-                    <td className="border border-black p-1 w-14 min-w-14 max-w-14 relative group">
+                    <td className="border border-black p-1 w-12 min-w-12 max-w-12 relative group">
                       <Popover open={openProductTypeDropdownIndex === index} onOpenChange={(open) => setOpenProductTypeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal">
-                            {item.productType || <span className="invisible">.</span>}
+                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
+                            <span className="flex-1">{item.productType || ''}</span>
+                            {!isPdfMode && (
+                              <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
+                            )}
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-[120px] p-0 bg-white z-50" align="start">
@@ -789,20 +865,23 @@ const OrderForm = () => {
                           </Command>
                         </PopoverContent>
                       </Popover>
-                      {item.productType && (
+                      {item.productType && !isPdfMode && (
                         <button
                           onClick={() => updateOrderItem(index, "productType", "")}
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-1 w-20 min-w-20 max-w-20 relative group">
+                    <td className="border border-black p-1 w-12 min-w-12 max-w-12 relative group">
                       <Popover open={openSizeDropdownIndex === index} onOpenChange={(open) => setOpenSizeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal">
-                            {item.size || <span className="invisible">.</span>}
+                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
+                            <span className="flex-1">{item.size || ''}</span>
+                            {!isPdfMode && (
+                              <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
+                            )}
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-[200px] p-0 bg-white z-50" align="start">
@@ -835,20 +914,23 @@ const OrderForm = () => {
                           </Command>
                         </PopoverContent>
                       </Popover>
-                      {item.size && (
+                      {item.size && !isPdfMode && (
                         <button
                           onClick={() => updateOrderItem(index, "size", "")}
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-1 w-50 min-w-50 max-w-50 relative group">
+                    <td className="border border-black p-1 w-60 min-w-60 max-w-60 relative group">
                       <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal">
-                            {item.details || <span className="invisible">.</span>}
+                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
+                            <span className="flex-1">{item.details || ''}</span>
+                            {!isPdfMode && (
+                              <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
+                            )}
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-[400px] p-0 bg-white z-50" align="start">
@@ -884,10 +966,10 @@ const OrderForm = () => {
                           </Command>
                         </PopoverContent>
                       </Popover>
-                      {item.details && (
+                      {item.details && !isPdfMode && (
                         <button
                           onClick={() => updateOrderItem(index, "details", "")}
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
                         </button>
@@ -896,14 +978,24 @@ const OrderForm = () => {
                     <td className="border border-black p-1">
                       <Input
                         value={item.quantity}
-                        onChange={(e) => updateOrderItem(index, "quantity", e.target.value)}
+                        onChange={(e) => {
+                          const formatted = formatQuantity(e.target.value);
+                          updateOrderItem(index, "quantity", formatted);
+                        }}
                         className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
                       />
                     </td>
                     <td className="border border-black p-1">
                       <Input
                         value={item.price}
-                        onChange={(e) => updateOrderItem(index, "price", e.target.value)}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                          updateOrderItem(index, "price", rawValue);
+                        }}
+                        onBlur={(e) => {
+                          const formatted = formatPrice(item.price);
+                          updateOrderItem(index, "price", formatted);
+                        }}
                         className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
                       />
                     </td>
@@ -936,12 +1028,16 @@ const OrderForm = () => {
                       />
                     </td>
                     <td className="border border-black p-1 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.thai}
-                        onChange={(e) => updateOrderItem(index, "thai", e.target.checked)}
-                        className="w-3 h-3"
-                      />
+                      {isPdfMode ? (
+                        item.thai ? <span className="text-xs">✓</span> : null
+                      ) : (
+                        <input
+                          type="checkbox"
+                          checked={item.thai}
+                          onChange={(e) => updateOrderItem(index, "thai", e.target.checked)}
+                          className="w-3 h-3"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1">
                       <Input
