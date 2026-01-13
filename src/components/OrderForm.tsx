@@ -620,60 +620,107 @@ const OrderForm = () => {
                   <th className="border border-black p-1 text-center font-normal w-8">PLA</th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">ใส่ของร้อน</span>
-                        <span className="block">(ที่อุณหภูมิ</span>
-                        <span className="block">45 - 70 C°)</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">ใส่ของร้อน</span>
+                          <span className="block">(ที่อุณหภูมิ</span>
+                          <span className="block">45 - 70 C°)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">ใส่ของร้อน</span>
+                          <span className="block">(ที่อุณหภูมิ</span>
+                          <span className="block">45 - 70 C°)</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">ที่อุณหภูมิปกติ</span>
-                        <span className="block">(ที่อุณหภูมิ</span>
-                        <span className="block">25 C°)</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">ที่อุณหภูมิปกติ</span>
+                          <span className="block">(ที่อุณหภูมิ</span>
+                          <span className="block">25 C°)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">ที่อุณหภูมิปกติ</span>
+                          <span className="block">(ที่อุณหภูมิ</span>
+                          <span className="block">25 C°)</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">ที่อุณหภูมิแช่เย็น</span>
-                        <span className="block">(ที่อุณหภูมิ</span>
-                        <span className="block">0 - 10 C°)</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">ที่อุณหภูมิแช่เย็น</span>
+                          <span className="block">(ที่อุณหภูมิ</span>
+                          <span className="block">0 - 10 C°)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">ที่อุณหภูมิแช่เย็น</span>
+                          <span className="block">(ที่อุณหภูมิ</span>
+                          <span className="block">0 - 10 C°)</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">ที่อุณหภูมิแช่แข็ง</span>
-                        <span className="block">(ที่อุณหภูมิ</span>
-                        <span className="block">-1 ถึง -80 C°)</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">ที่อุณหภูมิแช่แข็ง</span>
+                          <span className="block">(ที่อุณหภูมิ</span>
+                          <span className="block">-1 ถึง -80 C°)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">ที่อุณหภูมิแช่แข็ง</span>
+                          <span className="block">(ที่อุณหภูมิ</span>
+                          <span className="block">-1 ถึง -80 C°)</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        อื่นๆ
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px]">อื่นๆ</span>
+                      ) : (
+                        <span className="text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          อื่นๆ
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
                     <div className="h-16 flex items-center justify-center">
-                      <span className="text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        ไทย
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px]">ไทย</span>
+                      ) : (
+                        <span className="text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          ไทย
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
                     <div className="h-16 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">ต่างประเทศ</span>
-                        <span className="block">(ระบุ)</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">ต่างประเทศ</span>
+                          <span className="block">(ระบุ)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">ต่างประเทศ</span>
+                          <span className="block">(ระบุ)</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                 </tr>
@@ -681,35 +728,64 @@ const OrderForm = () => {
                 <tr>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">(อุณหภูมิสูงสุดที่</span>
-                        <span className="block">-20 C° ถึง 80 C°)</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">(อุณหภูมิสูงสุดที่</span>
+                          <span className="block">-20 C° ถึง 80 C°)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">(อุณหภูมิสูงสุดที่</span>
+                          <span className="block">-20 C° ถึง 80 C°)</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">(อุณหภูมิสูงสุดที่</span>
-                        <span className="block">-10 C° ถึง</span>
-                        <span className="block">100 C°/120 C°(M))</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">(อุณหภูมิสูงสุดที่</span>
+                          <span className="block">-10 C° ถึง</span>
+                          <span className="block">100 C°/120 C°(M))</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">(อุณหภูมิสูงสุดที่</span>
+                          <span className="block">-10 C° ถึง</span>
+                          <span className="block">100 C°/120 C°(M))</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">(อุณหภูมิสูงสุดที่</span>
-                        <span className="block">-10 C° ถึง 70 C°)</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">(อุณหภูมิสูงสุดที่</span>
+                          <span className="block">-10 C° ถึง 70 C°)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">(อุณหภูมิสูงสุดที่</span>
+                          <span className="block">-10 C° ถึง 70 C°)</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        <span className="block">(อุณหภูมิสูงสุดที่</span>
-                        <span className="block">0 C° ถึง 50 C°)</span>
-                      </span>
+                      {isPdfMode ? (
+                        <span className="text-[7px] leading-tight text-center">
+                          <span className="block">(อุณหภูมิสูงสุดที่</span>
+                          <span className="block">0 C° ถึง 50 C°)</span>
+                        </span>
+                      ) : (
+                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                          <span className="block">(อุณหภูมิสูงสุดที่</span>
+                          <span className="block">0 C° ถึง 50 C°)</span>
+                        </span>
+                      )}
                     </div>
                   </th>
                 </tr>
