@@ -12,6 +12,45 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import logo from "@/assets/logo.png";
 
+// SVG component for rotated text that works with html2canvas
+interface RotatedTextSVGProps {
+  lines: string[];
+  height?: number;
+  width?: number;
+  fontSize?: number;
+}
+
+const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 7 }: RotatedTextSVGProps) => {
+  const lineHeight = fontSize + 2;
+  const totalTextHeight = lines.length * lineHeight;
+  const startY = (height + totalTextHeight) / 2 - lineHeight / 2;
+  
+  return (
+    <svg 
+      width={width} 
+      height={height} 
+      viewBox={`0 0 ${width} ${height}`}
+      style={{ display: 'block' }}
+    >
+      <g transform={`rotate(-90, ${width / 2}, ${height / 2})`}>
+        {lines.map((line, index) => (
+          <text
+            key={index}
+            x={width / 2}
+            y={startY - (lines.length - 1 - index) * lineHeight}
+            textAnchor="middle"
+            fontSize={fontSize}
+            fontFamily="Sarabun, sans-serif"
+            fill="black"
+          >
+            {line}
+          </text>
+        ))}
+      </g>
+    </svg>
+  );
+};
+
 // Format number with commas (no decimals)
 const formatQuantity = (value: string): string => {
   const num = value.replace(/[^0-9]/g, '');
@@ -620,107 +659,37 @@ const OrderForm = () => {
                   <th className="border border-black p-1 text-center font-normal w-8">PLA</th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">ใส่ของร้อน</span>
-                          <span className="block">(ที่อุณหภูมิ</span>
-                          <span className="block">45 - 70 C°)</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">ใส่ของร้อน</span>
-                          <span className="block">(ที่อุณหภูมิ</span>
-                          <span className="block">45 - 70 C°)</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["ใส่ของร้อน", "(ที่อุณหภูมิ", "45 - 70 C°)"]} height={90} width={40} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">ที่อุณหภูมิปกติ</span>
-                          <span className="block">(ที่อุณหภูมิ</span>
-                          <span className="block">25 C°)</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">ที่อุณหภูมิปกติ</span>
-                          <span className="block">(ที่อุณหภูมิ</span>
-                          <span className="block">25 C°)</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["ที่อุณหภูมิปกติ", "(ที่อุณหภูมิ", "25 C°)"]} height={90} width={40} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">ที่อุณหภูมิแช่เย็น</span>
-                          <span className="block">(ที่อุณหภูมิ</span>
-                          <span className="block">0 - 10 C°)</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">ที่อุณหภูมิแช่เย็น</span>
-                          <span className="block">(ที่อุณหภูมิ</span>
-                          <span className="block">0 - 10 C°)</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่เย็น", "(ที่อุณหภูมิ", "0 - 10 C°)"]} height={90} width={40} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">ที่อุณหภูมิแช่แข็ง</span>
-                          <span className="block">(ที่อุณหภูมิ</span>
-                          <span className="block">-1 ถึง -80 C°)</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">ที่อุณหภูมิแช่แข็ง</span>
-                          <span className="block">(ที่อุณหภูมิ</span>
-                          <span className="block">-1 ถึง -80 C°)</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่แข็ง", "(ที่อุณหภูมิ", "-1 ถึง -80 C°)"]} height={90} width={40} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px]">อื่นๆ</span>
-                      ) : (
-                        <span className="text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          อื่นๆ
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["อื่นๆ"]} height={90} width={30} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
                     <div className="h-16 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px]">ไทย</span>
-                      ) : (
-                        <span className="text-[7px]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          ไทย
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["ไทย"]} height={60} width={30} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
                     <div className="h-16 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">ต่างประเทศ</span>
-                          <span className="block">(ระบุ)</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">ต่างประเทศ</span>
-                          <span className="block">(ระบุ)</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["ต่างประเทศ", "(ระบุ)"]} height={60} width={30} />
                     </div>
                   </th>
                 </tr>
@@ -728,64 +697,22 @@ const OrderForm = () => {
                 <tr>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">(อุณหภูมิสูงสุดที่</span>
-                          <span className="block">-20 C° ถึง 80 C°)</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">(อุณหภูมิสูงสุดที่</span>
-                          <span className="block">-20 C° ถึง 80 C°)</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-20 C° ถึง 80 C°)"]} height={90} width={40} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">(อุณหภูมิสูงสุดที่</span>
-                          <span className="block">-10 C° ถึง</span>
-                          <span className="block">100 C°/120 C°(M))</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">(อุณหภูมิสูงสุดที่</span>
-                          <span className="block">-10 C° ถึง</span>
-                          <span className="block">100 C°/120 C°(M))</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง", "100 C°/120 C°(M))"]} height={90} width={40} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">(อุณหภูมิสูงสุดที่</span>
-                          <span className="block">-10 C° ถึง 70 C°)</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">(อุณหภูมิสูงสุดที่</span>
-                          <span className="block">-10 C° ถึง 70 C°)</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 70 C°)"]} height={90} width={40} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24">
                     <div className="h-24 flex items-center justify-center">
-                      {isPdfMode ? (
-                        <span className="text-[7px] leading-tight text-center">
-                          <span className="block">(อุณหภูมิสูงสุดที่</span>
-                          <span className="block">0 C° ถึง 50 C°)</span>
-                        </span>
-                      ) : (
-                        <span className="text-[7px] leading-tight" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                          <span className="block">(อุณหภูมิสูงสุดที่</span>
-                          <span className="block">0 C° ถึง 50 C°)</span>
-                        </span>
-                      )}
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "0 C° ถึง 50 C°)"]} height={90} width={40} />
                     </div>
                   </th>
                 </tr>
