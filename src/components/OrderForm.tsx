@@ -51,11 +51,19 @@ const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 7 }: Rotate
   );
 };
 
-// Format number with commas (no decimals)
-const formatQuantity = (value: string): string => {
+// Format number with commas (no decimals) - returns raw number for storage
+const formatQuantityDisplay = (value: string): string => {
   const num = value.replace(/[^0-9]/g, '');
   if (!num) return '';
   return parseInt(num, 10).toLocaleString('en-US');
+};
+
+// Parse quantity back to raw number for PDF
+const getQuantityForPdf = (value: string): string => {
+  const num = value.replace(/[^0-9]/g, '');
+  if (!num) return '';
+  // Use regex to add commas manually instead of toLocaleString
+  return num.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
 // Format number with commas and 2 decimal places
@@ -352,7 +360,7 @@ interface OrderItem {
   deliverableNote: string;
   notDeliverableNote: string;
   exportType: string;
-  thai: boolean;
+  thai: string;
   foreign: boolean;
   lawRef: string;
   notes: string;
@@ -389,7 +397,7 @@ const OrderForm = () => {
     deliverableNote: "",
     notDeliverableNote: "",
     exportType: "",
-    thai: false,
+    thai: "",
     foreign: false,
     lawRef: "",
     notes: "",
@@ -492,11 +500,15 @@ const OrderForm = () => {
               <div>FM-PPS-02 REV.03</div>
               <div className="flex items-center gap-1 mt-1">
                 <span>No.</span>
-                <Input
-                  value={formData.orderNumber}
-                  onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
-                  className="w-32 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
-                />
+                {isPdfMode ? (
+                  <span className="text-sm border-b border-black min-w-32 inline-block">{formData.orderNumber}</span>
+                ) : (
+                  <Input
+                    value={formData.orderNumber}
+                    onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
+                    className="w-32 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -525,11 +537,15 @@ const OrderForm = () => {
                 className="w-4 h-4 border-2 border-black accent-black"
               />
               <span className="text-sm">ใบสั่งซื้อ PO. No.</span>
-              <Input
-                value={formData.poNumber}
-                onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })}
-                className="w-32 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
-              />
+              {isPdfMode ? (
+                <span className="text-sm border-b border-black min-w-32 inline-block">{formData.poNumber}</span>
+              ) : (
+                <Input
+                  value={formData.poNumber}
+                  onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })}
+                  className="w-32 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                />
+              )}
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -541,11 +557,15 @@ const OrderForm = () => {
                 className="w-4 h-4 border-2 border-black accent-black"
               />
               <span className="text-sm">อื่นๆ</span>
-              <Input
-                value={formData.otherText}
-                onChange={(e) => setFormData({ ...formData, otherText: e.target.value })}
-                className="w-40 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
-              />
+              {isPdfMode ? (
+                <span className="text-sm border-b border-black min-w-40 inline-block">{formData.otherText}</span>
+              ) : (
+                <Input
+                  value={formData.otherText}
+                  onChange={(e) => setFormData({ ...formData, otherText: e.target.value })}
+                  className="w-40 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                />
+              )}
             </label>
           </div>
 
@@ -553,14 +573,23 @@ const OrderForm = () => {
           <div className="flex items-center gap-4 mb-3 flex-wrap">
             <div className="flex items-center gap-2">
               <span className="text-sm underline">ชื่อลูกค้า</span>
-              <Input
-                value={formData.customerName}
-                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
-              />
+              {isPdfMode ? (
+                <span className="text-sm border-b border-black min-w-48 inline-block">{formData.customerName}</span>
+              ) : (
+                <Input
+                  value={formData.customerName}
+                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                  className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                />
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm underline">วันที่</span>
+              {isPdfMode ? (
+                <span className="text-sm border-b border-black px-2 py-0 min-w-32 inline-block">
+                  {formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : ''}
+                </span>
+              ) : (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -590,14 +619,19 @@ const OrderForm = () => {
                   />
                 </PopoverContent>
               </Popover>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm underline">บุคคลที่ติดต่อ</span>
-              <Input
-                value={formData.contactPerson}
-                onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
-              />
+              {isPdfMode ? (
+                <span className="text-sm border-b border-black min-w-48 inline-block">{formData.contactPerson}</span>
+              ) : (
+                <Input
+                  value={formData.contactPerson}
+                  onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                  className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                />
+              )}
             </div>
           </div>
 
@@ -979,82 +1013,113 @@ const OrderForm = () => {
                       )}
                     </td>
                     <td className="border border-black p-1">
-                      <Input
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const formatted = formatQuantity(e.target.value);
-                          updateOrderItem(index, "quantity", formatted);
-                        }}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
-                      />
-                    </td>
-                    <td className="border border-black p-1">
-                      <Input
-                        value={item.price}
-                        onChange={(e) => {
-                          const rawValue = e.target.value.replace(/[^0-9.]/g, '');
-                          updateOrderItem(index, "price", rawValue);
-                        }}
-                        onBlur={(e) => {
-                          const formatted = formatPrice(item.price);
-                          updateOrderItem(index, "price", formatted);
-                        }}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
-                      />
-                    </td>
-                    <td className="border border-black p-1">
-                      <Input
-                        value={item.deliveryDate}
-                        onChange={(e) => updateOrderItem(index, "deliveryDate", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
-                      />
-                    </td>
-                    <td className="border border-black p-1">
-                      <Input
-                        value={item.deliverableNote}
-                        onChange={(e) => updateOrderItem(index, "deliverableNote", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
-                      />
-                    </td>
-                    <td className="border border-black p-1">
-                      <Input
-                        value={item.notDeliverableNote}
-                        onChange={(e) => updateOrderItem(index, "notDeliverableNote", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
-                      />
-                    </td>
-                    <td className="border border-black p-1">
-                      <Input
-                        value={item.exportType}
-                        onChange={(e) => updateOrderItem(index, "exportType", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
-                      />
-                    </td>
-                    <td className="border border-black p-1 text-center">
                       {isPdfMode ? (
-                        item.thai ? <span className="text-xs">✓</span> : null
+                        <span className="text-xs text-center block">{getQuantityForPdf(item.quantity)}</span>
                       ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.thai}
-                          onChange={(e) => updateOrderItem(index, "thai", e.target.checked)}
-                          className="w-3 h-3"
+                        <Input
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const formatted = formatQuantityDisplay(e.target.value);
+                            updateOrderItem(index, "quantity", formatted);
+                          }}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
                         />
                       )}
                     </td>
                     <td className="border border-black p-1">
-                      <Input
-                        value={item.lawRef}
-                        onChange={(e) => updateOrderItem(index, "lawRef", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
-                      />
+                      {isPdfMode ? (
+                        <span className="text-xs text-center block">{item.price}</span>
+                      ) : (
+                        <Input
+                          value={item.price}
+                          onChange={(e) => {
+                            const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                            updateOrderItem(index, "price", rawValue);
+                          }}
+                          onBlur={(e) => {
+                            const formatted = formatPrice(item.price);
+                            updateOrderItem(index, "price", formatted);
+                          }}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
+                        />
+                      )}
                     </td>
                     <td className="border border-black p-1">
-                      <Input
-                        value={item.notes}
-                        onChange={(e) => updateOrderItem(index, "notes", e.target.value)}
-                        className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
-                      />
+                      {isPdfMode ? (
+                        <span className="text-xs text-center block">{item.deliveryDate}</span>
+                      ) : (
+                        <Input
+                          value={item.deliveryDate}
+                          onChange={(e) => updateOrderItem(index, "deliveryDate", e.target.value)}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
+                        />
+                      )}
+                    </td>
+                    <td className="border border-black p-1">
+                      {isPdfMode ? (
+                        <span className="text-xs">{item.deliverableNote}</span>
+                      ) : (
+                        <Input
+                          value={item.deliverableNote}
+                          onChange={(e) => updateOrderItem(index, "deliverableNote", e.target.value)}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                        />
+                      )}
+                    </td>
+                    <td className="border border-black p-1">
+                      {isPdfMode ? (
+                        <span className="text-xs">{item.notDeliverableNote}</span>
+                      ) : (
+                        <Input
+                          value={item.notDeliverableNote}
+                          onChange={(e) => updateOrderItem(index, "notDeliverableNote", e.target.value)}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                        />
+                      )}
+                    </td>
+                    <td className="border border-black p-1">
+                      {isPdfMode ? (
+                        <span className="text-xs">{item.exportType}</span>
+                      ) : (
+                        <Input
+                          value={item.exportType}
+                          onChange={(e) => updateOrderItem(index, "exportType", e.target.value)}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                        />
+                      )}
+                    </td>
+                    <td className="border border-black p-1 text-center">
+                      {isPdfMode ? (
+                        <span className="text-xs">{item.thai}</span>
+                      ) : (
+                        <Input
+                          value={item.thai}
+                          onChange={(e) => updateOrderItem(index, "thai", e.target.value)}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
+                        />
+                      )}
+                    </td>
+                    <td className="border border-black p-1">
+                      {isPdfMode ? (
+                        <span className="text-xs">{item.lawRef}</span>
+                      ) : (
+                        <Input
+                          value={item.lawRef}
+                          onChange={(e) => updateOrderItem(index, "lawRef", e.target.value)}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                        />
+                      )}
+                    </td>
+                    <td className="border border-black p-1">
+                      {isPdfMode ? (
+                        <span className="text-xs">{item.notes}</span>
+                      ) : (
+                        <Input
+                          value={item.notes}
+                          onChange={(e) => updateOrderItem(index, "notes", e.target.value)}
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1066,11 +1131,15 @@ const OrderForm = () => {
           <div className="flex justify-end mt-4">
             <div className="text-center text-sm">
               <span>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
-              <Input
-                value={signature}
-                onChange={(e) => setSignature(e.target.value)}
-                className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none mx-2 inline-block bg-transparent"
-              />
+              {isPdfMode ? (
+                <span className="text-sm border-b border-black min-w-48 inline-block mx-2">{signature}</span>
+              ) : (
+                <Input
+                  value={signature}
+                  onChange={(e) => setSignature(e.target.value)}
+                  className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none mx-2 inline-block bg-transparent"
+                />
+              )}
             </div>
           </div>
 
