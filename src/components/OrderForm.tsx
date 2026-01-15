@@ -501,12 +501,12 @@ const OrderForm = () => {
               <div className="flex items-center gap-1 mt-1">
                 <span>No.</span>
                 {isPdfMode ? (
-                  <span className="text-sm border-b border-black min-w-32 inline-block">{formData.orderNumber}</span>
+                  <span className="text-sm border-b border-black min-w-32 inline-block text-left pb-1">{formData.orderNumber}</span>
                 ) : (
                   <Input
                     value={formData.orderNumber}
                     onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
-                    className="w-32 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                    className="w-32 h-6 text-sm text-left border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
                   />
                 )}
               </div>
@@ -538,7 +538,7 @@ const OrderForm = () => {
               />
               <span className="text-sm">ใบสั่งซื้อ PO. No.</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-32 inline-block">{formData.poNumber}</span>
+                <span className="text-sm border-b border-black min-w-32 inline-block pb-1">{formData.poNumber}</span>
               ) : (
                 <Input
                   value={formData.poNumber}
@@ -558,7 +558,7 @@ const OrderForm = () => {
               />
               <span className="text-sm">อื่นๆ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-40 inline-block">{formData.otherText}</span>
+                <span className="text-sm border-b border-black min-w-40 inline-block pb-1">{formData.otherText}</span>
               ) : (
                 <Input
                   value={formData.otherText}
@@ -574,7 +574,7 @@ const OrderForm = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm underline">ชื่อลูกค้า</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 inline-block">{formData.customerName}</span>
+                <span className="text-sm border-b border-black min-w-48 inline-block pb-1">{formData.customerName}</span>
               ) : (
                 <Input
                   value={formData.customerName}
@@ -586,7 +586,7 @@ const OrderForm = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm underline">วันที่</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black px-2 py-0 min-w-32 inline-block">
+                <span className="text-sm border-b border-black px-2 py-0 min-w-32 inline-block pb-1">
                   {formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : ''}
                 </span>
               ) : (
@@ -624,7 +624,7 @@ const OrderForm = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm underline">บุคคลที่ติดต่อ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 inline-block">{formData.contactPerson}</span>
+                <span className="text-sm border-b border-black min-w-48 inline-block pb-1">{formData.contactPerson}</span>
               ) : (
                 <Input
                   value={formData.contactPerson}
@@ -687,41 +687,41 @@ const OrderForm = () => {
                 </tr>
                 {/* Row 2: Material types and usage categories */}
                 <tr>
-                  <th className="border border-black p-1 text-center font-normal w-8">PS</th>
-                  <th className="border border-black p-1 text-center font-normal w-8">PP</th>
-                  <th className="border border-black p-1 text-center font-normal w-8">PET</th>
-                  <th className="border border-black p-1 text-center font-normal w-8">PLA</th>
-                  <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8">PS</th>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8">PP</th>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8">PET</th>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8">PLA</th>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ใส่ของร้อน", "(ที่อุณหภูมิ", "45 - 70 C°)"]} height={90} width={40} />
+                      <RotatedTextSVG lines={["ใส่ของร้อน", "(ที่อุณหภูมิ", "45 - 70 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิปกติ", "(ที่อุณหภูมิ", "25 C°)"]} height={90} width={40} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิปกติ", "(ที่อุณหภูมิ", "25 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่เย็น", "(ที่อุณหภูมิ", "0 - 10 C°)"]} height={90} width={40} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่เย็น", "(ที่อุณหภูมิ", "0 - 10 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-10" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่แข็ง", "(ที่อุณหภูมิ", "-1 ถึง -80 C°)"]} height={90} width={40} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่แข็ง", "(ที่อุณหภูมิ", "-1 ถึง -80 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["อื่นๆ"]} height={90} width={30} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-16 flex items-center justify-center">
                       <RotatedTextSVG lines={["ไทย"]} height={60} width={30} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-16 flex items-center justify-center">
                       <RotatedTextSVG lines={["ต่างประเทศ", "(ระบุ)"]} height={60} width={30} />
                     </div>
@@ -729,24 +729,24 @@ const OrderForm = () => {
                 </tr>
                 {/* Row 3: Temperature descriptions (rotated with line breaks) */}
                 <tr>
-                  <th className="border border-black p-1 text-center font-normal h-24">
+                  <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-20 C° ถึง 80 C°)"]} height={90} width={40} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-20 C° ถึง 80 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal h-24">
+                  <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง", "100 C°/120 C°(M))"]} height={90} width={40} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง", "100 C°/120 C°(M))"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal h-24">
+                  <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 70 C°)"]} height={90} width={40} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 70 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal h-24">
+                  <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "0 C° ถึง 50 C°)"]} height={90} width={40} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "0 C° ถึง 50 C°)"]} height={90} width={32} />
                     </div>
                   </th>
                 </tr>
@@ -754,7 +754,7 @@ const OrderForm = () => {
               <tbody>
                 {orderItems.map((item, index) => (
                   <tr key={index}>
-                    <td className="border border-black p-1 h-8 w-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.ps ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -766,7 +766,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.pp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -778,7 +778,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.pet ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -790,7 +790,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.pla ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -802,7 +802,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.hotFood ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -814,7 +814,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.normalTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -826,7 +826,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.coldTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -838,7 +838,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.freezeTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -850,7 +850,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 text-center">
+                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
                       {isPdfMode ? (
                         item.otherUsage ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -1055,36 +1055,36 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 align-middle">
                       {isPdfMode ? (
-                        <span className="text-xs">{item.deliverableNote}</span>
+                        <span className="text-xs text-left block">{item.deliverableNote}</span>
                       ) : (
                         <Input
                           value={item.deliverableNote}
                           onChange={(e) => updateOrderItem(index, "deliverableNote", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left"
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 align-middle">
                       {isPdfMode ? (
-                        <span className="text-xs">{item.notDeliverableNote}</span>
+                        <span className="text-xs text-left block">{item.notDeliverableNote}</span>
                       ) : (
                         <Input
                           value={item.notDeliverableNote}
                           onChange={(e) => updateOrderItem(index, "notDeliverableNote", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left"
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 align-middle">
                       {isPdfMode ? (
-                        <span className="text-xs">{item.exportType}</span>
+                        <span className="text-xs text-left block">{item.exportType}</span>
                       ) : (
                         <Input
                           value={item.exportType}
                           onChange={(e) => updateOrderItem(index, "exportType", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left"
                         />
                       )}
                     </td>
@@ -1132,7 +1132,7 @@ const OrderForm = () => {
             <div className="text-center text-sm">
               <span>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 inline-block mx-2">{signature}</span>
+                <span className="text-sm border-b border-black min-w-48 inline-block mx-2 pb-1">{signature}</span>
               ) : (
                 <Input
                   value={signature}
@@ -1144,8 +1144,9 @@ const OrderForm = () => {
           </div>
 
           {/* Footer */}
-          <div className="text-left mt-3 text-[9px] text-gray-600">
-            &quot;Electronic Document Control But UnControlled When Printed Out เอกสารจะไม่ควบคุม เมื่อพิมพ์ออกมาแล้ว&quot;
+          <div className="flex justify-between mt-3 text-[9px] text-gray-600">
+            <div>&quot;Electronic Document Control But UnControlled When Printed Out เอกสารจะไม่ควบคุม เมื่อพิมพ์ออกมาแล้ว&quot;</div>
+            <div>ED : 24/4/2024</div>
           </div>
         </div>
 
