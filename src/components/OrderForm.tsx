@@ -40,7 +40,7 @@ const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 7 }: Rotate
             y={startY - (lines.length - 1 - index) * lineHeight}
             textAnchor="middle"
             fontSize={fontSize}
-            fontFamily="Sarabun, sans-serif"
+            fontFamily="'Angsana New', 'TH Sarabun New', serif"
             fill="black"
           >
             {line}
@@ -479,7 +479,8 @@ const OrderForm = () => {
           ref={formRef} 
           className="bg-white p-6 shadow-lg mx-auto overflow-auto" 
           style={{ 
-            fontFamily: "Sarabun, sans-serif",
+            fontFamily: "'Angsana New', 'TH Sarabun New', serif",
+            fontSize: "12pt",
             width: `${a4Width}px`,
             minHeight: `${a4Height}px`,
             aspectRatio: "297 / 210"
@@ -492,11 +493,11 @@ const OrderForm = () => {
               <span className="text-sm">บริษัทแวนด้าแพค จำกัด</span>
             </div>
             <div className="text-center flex-1">
-              <h1 className="text-lg font-bold text-black">
+              <h1 className="font-bold text-black" style={{ fontSize: "18pt" }}>
                 ใบบันทึกการรับการสั่งซื้อ (ผลิตภัณฑ์บรรจุภัณฑ์)
               </h1>
             </div>
-            <div className="text-right text-sm">
+            <div className="text-right" style={{ fontSize: "8pt" }}>
               <div>FM-PPS-02 REV.03</div>
               <div className="flex items-center gap-1 mt-1">
                 <span>No.</span>
@@ -753,8 +754,8 @@ const OrderForm = () => {
               </thead>
               <tbody>
                 {orderItems.map((item, index) => (
-                  <tr key={index}>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                  <tr key={index} className="h-10" style={{ height: "40px" }}>
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.ps ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -766,7 +767,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.pp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -778,7 +779,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.pet ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -790,7 +791,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.pla ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -802,7 +803,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.hotFood ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -814,7 +815,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.normalTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -826,7 +827,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.coldTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -838,7 +839,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.freezeTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -850,7 +851,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-8 w-8 min-w-8 max-w-8 text-center">
+                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.otherUsage ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -862,7 +863,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 w-12 min-w-12 max-w-12 relative group">
+                    <td className="border border-black p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle">
                       <Popover open={openProductTypeDropdownIndex === index} onOpenChange={(open) => setOpenProductTypeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -911,7 +912,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-1 w-12 min-w-12 max-w-12 relative group">
+                    <td className="border border-black p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle">
                       <Popover open={openSizeDropdownIndex === index} onOpenChange={(open) => setOpenSizeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -960,7 +961,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-1 w-60 min-w-60 max-w-60 relative group">
+                    <td className="border border-black p-1 h-10 w-60 min-w-60 max-w-60 relative group align-middle">
                       <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -1012,7 +1013,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{getQuantityForPdf(item.quantity)}</span>
                       ) : (
@@ -1026,7 +1027,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{item.price}</span>
                       ) : (
@@ -1044,7 +1045,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{item.deliveryDate}</span>
                       ) : (
@@ -1055,7 +1056,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 align-middle">
+                    <td className="border border-black p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.deliverableNote}</span>
                       ) : (
@@ -1066,7 +1067,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 align-middle">
+                    <td className="border border-black p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.notDeliverableNote}</span>
                       ) : (
@@ -1077,7 +1078,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 align-middle">
+                    <td className="border border-black p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.exportType}</span>
                       ) : (
@@ -1088,7 +1089,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 text-center">
+                    <td className="border border-black p-1 h-10 text-center align-middle">
                       {isPdfMode ? (
                         <span className="text-xs">{item.thai}</span>
                       ) : (
@@ -1099,7 +1100,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs">{item.lawRef}</span>
                       ) : (
@@ -1110,7 +1111,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1">
+                    <td className="border border-black p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs">{item.notes}</span>
                       ) : (
@@ -1144,7 +1145,7 @@ const OrderForm = () => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-between mt-3 text-[9px] text-gray-600">
+          <div className="flex justify-between mt-3 text-gray-600" style={{ fontSize: "8pt" }}>
             <div>&quot;Electronic Document Control But UnControlled When Printed Out เอกสารจะไม่ควบคุม เมื่อพิมพ์ออกมาแล้ว&quot;</div>
             <div>ED : 24/4/2024</div>
           </div>
