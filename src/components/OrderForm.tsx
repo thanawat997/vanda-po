@@ -20,7 +20,7 @@ interface RotatedTextSVGProps {
   fontSize?: number;
 }
 
-const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 7 }: RotatedTextSVGProps) => {
+const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 11 }: RotatedTextSVGProps) => {
   const lineHeight = fontSize + 2;
   const totalTextHeight = lines.length * lineHeight;
   const startY = (height + totalTextHeight) / 2 - lineHeight / 2;
@@ -502,7 +502,7 @@ const OrderForm = () => {
               <div className="flex items-center gap-1 mt-1">
                 <span>No.</span>
                 {isPdfMode ? (
-                  <span className="text-sm border-b border-black min-w-32 inline-block text-left pb-1">{formData.orderNumber}</span>
+                  <span className="text-sm border-b border-black min-w-32 min-h-[24px] inline-flex items-end text-left">{formData.orderNumber}</span>
                 ) : (
                   <Input
                     value={formData.orderNumber}
@@ -539,7 +539,7 @@ const OrderForm = () => {
               />
               <span className="text-sm">ใบสั่งซื้อ PO. No.</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-32 inline-block pb-1">{formData.poNumber}</span>
+                <span className="text-sm border-b border-black min-w-32 min-h-[24px] inline-flex items-end">{formData.poNumber}</span>
               ) : (
                 <Input
                   value={formData.poNumber}
@@ -559,7 +559,7 @@ const OrderForm = () => {
               />
               <span className="text-sm">อื่นๆ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-40 inline-block pb-1">{formData.otherText}</span>
+                <span className="text-sm border-b border-black min-w-40 min-h-[24px] inline-flex items-end">{formData.otherText}</span>
               ) : (
                 <Input
                   value={formData.otherText}
@@ -575,7 +575,7 @@ const OrderForm = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm underline">ชื่อลูกค้า</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 inline-block pb-1">{formData.customerName}</span>
+                <span className="text-sm border-b border-black min-w-48 min-h-[24px] inline-flex items-end">{formData.customerName}</span>
               ) : (
                 <Input
                   value={formData.customerName}
@@ -587,7 +587,7 @@ const OrderForm = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm underline">วันที่</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black px-2 py-0 min-w-32 inline-block pb-1">
+                <span className="text-sm border-b border-black px-2 min-w-32 min-h-[24px] inline-flex items-end">
                   {formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : ''}
                 </span>
               ) : (
@@ -625,7 +625,7 @@ const OrderForm = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm underline">บุคคลที่ติดต่อ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 inline-block pb-1">{formData.contactPerson}</span>
+                <span className="text-sm border-b border-black min-w-48 min-h-[24px] inline-flex items-end">{formData.contactPerson}</span>
               ) : (
                 <Input
                   value={formData.contactPerson}
@@ -637,8 +637,8 @@ const OrderForm = () => {
           </div>
 
           {/* Main Table */}
-          <div className="border border-black overflow-x-auto">
-            <table className="w-full text-[10px] border-collapse">
+          <div className="border-2 border-black overflow-x-auto">
+            <table className="w-full text-[10px] border-collapse" style={{ borderSpacing: 0 }}>
               <thead>
                 {/* Row 1: Main headers */}
                 <tr>
@@ -755,7 +755,7 @@ const OrderForm = () => {
               <tbody>
                 {orderItems.map((item, index) => (
                   <tr key={index} className="h-10" style={{ height: "40px" }}>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.ps ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -767,7 +767,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.pp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -779,7 +779,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.pet ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -791,7 +791,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.pla ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -803,7 +803,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.hotFood ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -815,7 +815,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.normalTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -827,7 +827,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.coldTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -839,7 +839,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.freezeTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -851,7 +851,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.otherUsage ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -863,7 +863,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle">
                       <Popover open={openProductTypeDropdownIndex === index} onOpenChange={(open) => setOpenProductTypeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -912,7 +912,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle">
                       <Popover open={openSizeDropdownIndex === index} onOpenChange={(open) => setOpenSizeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -961,7 +961,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 w-60 min-w-60 max-w-60 relative group align-middle">
+                    <td className="border border-gray-400 p-1 h-10 w-60 min-w-60 max-w-60 relative group align-middle">
                       <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -1013,7 +1013,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 align-middle">
+                    <td className="border border-gray-400 p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{getQuantityForPdf(item.quantity)}</span>
                       ) : (
@@ -1027,7 +1027,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 align-middle">
+                    <td className="border border-gray-400 p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{item.price}</span>
                       ) : (
@@ -1045,7 +1045,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 align-middle">
+                    <td className="border border-gray-400 p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{item.deliveryDate}</span>
                       ) : (
@@ -1056,7 +1056,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 align-middle">
+                    <td className="border border-gray-400 p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.deliverableNote}</span>
                       ) : (
@@ -1067,7 +1067,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 align-middle">
+                    <td className="border border-gray-400 p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.notDeliverableNote}</span>
                       ) : (
@@ -1078,7 +1078,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 align-middle">
+                    <td className="border border-gray-400 p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.exportType}</span>
                       ) : (
@@ -1089,7 +1089,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 text-center align-middle">
+                    <td className="border border-gray-400 p-1 h-10 text-center align-middle">
                       {isPdfMode ? (
                         <span className="text-xs">{item.thai}</span>
                       ) : (
@@ -1100,7 +1100,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 align-middle">
+                    <td className="border border-gray-400 p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs">{item.lawRef}</span>
                       ) : (
@@ -1111,7 +1111,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black p-1 h-10 align-middle">
+                    <td className="border border-gray-400 p-1 h-10 align-middle">
                       {isPdfMode ? (
                         <span className="text-xs">{item.notes}</span>
                       ) : (
@@ -1133,7 +1133,7 @@ const OrderForm = () => {
             <div className="text-center text-sm">
               <span>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 inline-block mx-2 pb-1">{signature}</span>
+                <span className="text-sm border-b border-black min-w-48 min-h-[24px] inline-flex items-end mx-2">{signature}</span>
               ) : (
                 <Input
                   value={signature}
