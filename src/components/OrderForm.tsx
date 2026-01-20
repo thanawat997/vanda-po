@@ -12,6 +12,9 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import logo from "@/assets/logo.png";
 
+// Common styles for font size 12pt
+const fontSize12Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "12pt" };
+
 // SVG component for rotated text that works with html2canvas
 interface RotatedTextSVGProps {
   lines: string[];
@@ -411,6 +414,7 @@ const OrderForm = () => {
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
   const [openSizeDropdownIndex, setOpenSizeDropdownIndex] = useState<number | null>(null);
   const [openProductTypeDropdownIndex, setOpenProductTypeDropdownIndex] = useState<number | null>(null);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const [isPdfMode, setIsPdfMode] = useState(false);
 
@@ -499,15 +503,16 @@ const OrderForm = () => {
             </div>
             <div className="text-right" style={{ fontSize: "8pt" }}>
               <div>FM-PPS-02 REV.03</div>
-              <div className="flex items-center gap-1 mt-1">
+              <div className="flex items-center gap-1 mt-1" style={fontSize12Style}>
                 <span>No.</span>
                 {isPdfMode ? (
-                  <span className="text-sm border-b border-black min-w-32 min-h-[24px] inline-flex items-end text-left">{formData.orderNumber}</span>
+                  <span className="border-b border-black min-w-32 h-[28px] inline-flex items-end pb-1 text-left" style={fontSize12Style}>{formData.orderNumber}</span>
                 ) : (
                   <Input
                     value={formData.orderNumber}
                     onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
-                    className="w-32 h-6 text-sm text-left border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                    className="w-32 h-[28px] text-left border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-1"
+                    style={fontSize12Style}
                   />
                 )}
               </div>
@@ -515,8 +520,8 @@ const OrderForm = () => {
           </div>
 
           {/* Order Type */}
-          <div className="flex items-center gap-6 mb-3 flex-wrap">
-            <div className="font-bold underline text-sm">ประเภท</div>
+          <div className="flex items-center gap-6 mb-3 flex-wrap" style={fontSize12Style}>
+            <div className="font-bold" style={fontSize12Style}>ประเภท</div>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -526,7 +531,7 @@ const OrderForm = () => {
                 }
                 className="w-4 h-4 border-2 border-black accent-black"
               />
-              <span className="text-sm">โทรศัพท์</span>
+              <span style={fontSize12Style}>โทรศัพท์</span>
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -537,14 +542,15 @@ const OrderForm = () => {
                 }
                 className="w-4 h-4 border-2 border-black accent-black"
               />
-              <span className="text-sm">ใบสั่งซื้อ PO. No.</span>
+              <span style={fontSize12Style}>ใบสั่งซื้อ PO. No.</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-32 min-h-[24px] inline-flex items-end">{formData.poNumber}</span>
+                <span className="border-b border-black min-w-32 h-[28px] inline-flex items-end pb-1" style={fontSize12Style}>{formData.poNumber}</span>
               ) : (
                 <Input
                   value={formData.poNumber}
                   onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })}
-                  className="w-32 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                  className="w-32 h-[28px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-1"
+                  style={fontSize12Style}
                 />
               )}
             </label>
@@ -557,48 +563,51 @@ const OrderForm = () => {
                 }
                 className="w-4 h-4 border-2 border-black accent-black"
               />
-              <span className="text-sm">อื่นๆ</span>
+              <span style={fontSize12Style}>อื่นๆ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-40 min-h-[24px] inline-flex items-end">{formData.otherText}</span>
+                <span className="border-b border-black min-w-40 h-[28px] inline-flex items-end pb-1" style={fontSize12Style}>{formData.otherText}</span>
               ) : (
                 <Input
                   value={formData.otherText}
                   onChange={(e) => setFormData({ ...formData, otherText: e.target.value })}
-                  className="w-40 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                  className="w-40 h-[28px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-1"
+                  style={fontSize12Style}
                 />
               )}
             </label>
           </div>
 
           {/* Customer Info */}
-          <div className="flex items-center gap-4 mb-3 flex-wrap">
+          <div className="flex items-center gap-4 mb-3 flex-wrap" style={fontSize12Style}>
             <div className="flex items-center gap-2">
-              <span className="text-sm underline">ชื่อลูกค้า</span>
+              <span style={fontSize12Style}>ชื่อลูกค้า</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 min-h-[24px] inline-flex items-end">{formData.customerName}</span>
+                <span className="min-w-48 h-[28px] inline-flex items-end pb-1" style={fontSize12Style}>{formData.customerName}</span>
               ) : (
                 <Input
                   value={formData.customerName}
                   onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                  className="w-48 h-[28px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-1"
+                  style={fontSize12Style}
                 />
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm underline">วันที่</span>
+              <span style={fontSize12Style}>วันที่</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black px-2 min-w-32 min-h-[24px] inline-flex items-end">
+                <span className="px-2 min-w-32 h-[28px] inline-flex items-end pb-1" style={fontSize12Style}>
                   {formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : ''}
                 </span>
               ) : (
-              <Popover>
+              <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-36 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent justify-start text-left font-normal px-0 hover:bg-transparent",
+                      "w-36 h-[28px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent justify-start text-left font-normal px-0 hover:bg-transparent pb-1",
                       !formData.date && "text-muted-foreground"
                     )}
+                    style={fontSize12Style}
                   >
                     {formData.date ? (
                       format(formData.date, "dd/MM/yyyy", { locale: th })
@@ -614,7 +623,10 @@ const OrderForm = () => {
                   <Calendar
                     mode="single"
                     selected={formData.date}
-                    onSelect={(date) => setFormData({ ...formData, date })}
+                    onSelect={(date) => {
+                      setFormData({ ...formData, date });
+                      setIsDatePickerOpen(false);
+                    }}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
@@ -623,14 +635,15 @@ const OrderForm = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm underline">บุคคลที่ติดต่อ</span>
+              <span style={fontSize12Style}>บุคคลที่ติดต่อ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 min-h-[24px] inline-flex items-end">{formData.contactPerson}</span>
+                <span className="min-w-48 h-[28px] inline-flex items-end pb-1" style={fontSize12Style}>{formData.contactPerson}</span>
               ) : (
                 <Input
                   value={formData.contactPerson}
                   onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                  className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent"
+                  className="w-48 h-[28px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-1"
+                  style={fontSize12Style}
                 />
               )}
             </div>
@@ -638,78 +651,78 @@ const OrderForm = () => {
 
           {/* Main Table */}
           <div className="border-2 border-black overflow-x-auto">
-            <table className="w-full text-[10px] border-collapse" style={{ borderSpacing: 0 }}>
+            <table className="w-full border-collapse" style={{ borderSpacing: 0, ...fontSize12Style }}>
               <thead>
                 {/* Row 1: Main headers */}
                 <tr>
-                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={4}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={4} style={fontSize12Style}>
                     ชนิดวัตถุดิบ
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={5}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={5} style={fontSize12Style}>
                     คุณลักษณะการใช้งาน
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3}>ชนิดสินค้า</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-60 min-w-60 max-w-60" rowSpan={3}>รายละเอียด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3} style={fontSize12Style}>ชนิดสินค้า</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3} style={fontSize12Style}>ขนาด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-60 min-w-60 max-w-60" rowSpan={3} style={fontSize12Style}>รายละเอียด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
                     <div>จำนวน</div>
                     <div>การสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
                     <div>ราคา@</div>
                     <div>(บาท)</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
                     <div>วัน</div>
                     <div>กำหนด</div>
                     <div>ส่ง</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
                     <div>ส่งได้</div>
                     <div>ตาม</div>
                     <div>กำหนด</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
                     <div>ส่งไม่ได้</div>
                     <div>ตาม</div>
                     <div>กำหนด</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
                     <div>ประเทศ</div>
                     <div>ที่</div>
                     <div>ส่งออก</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={2}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" colSpan={2} style={fontSize12Style}>
                     <div>กฎหมาย</div>
                     <div>อ้างอิง</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3}>หมายเหตุ</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>หมายเหตุ</th>
                 </tr>
                 {/* Row 2: Material types and usage categories */}
                 <tr>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8">PS</th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8">PP</th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8">PET</th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8">PLA</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-8 min-w-8 max-w-8" style={fontSize12Style}>PS</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-8 min-w-8 max-w-8" style={fontSize12Style}>PP</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-8 min-w-8 max-w-8" style={fontSize12Style}>PET</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-8 min-w-8 max-w-8" style={fontSize12Style}>PLA</th>
                   <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ใส่ของร้อน", "(ที่อุณหภูมิ", "45 - 70 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["ใส่ของร้อน", "(ที่อุณหภูมิ 45 - 70 C°)"]} height={90} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิปกติ", "(ที่อุณหภูมิ", "25 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิปกติ", "(ที่อุณหภูมิ 25 C°)"]} height={90} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่เย็น", "(ที่อุณหภูมิ", "0 - 10 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่เย็น", "(ที่อุณหภูมิ 0 -10 C°)"]} height={90} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่แข็ง", "(ที่อุณหภูมิ", "-1 ถึง -80 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่แข็ง", "(ที่อุณหภูมิ -1 ถึง -80 C°)"]} height={90} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
@@ -737,7 +750,7 @@ const OrderForm = () => {
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง", "100 C°/120 C°(M))"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 100 C°/120 C°(M))"]} height={90} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
@@ -754,7 +767,7 @@ const OrderForm = () => {
               </thead>
               <tbody>
                 {orderItems.map((item, index) => (
-                  <tr key={index} className="h-10" style={{ height: "40px" }}>
+                  <tr key={index} className={index >= orderItems.length - 4 ? "h-[120px]" : "h-10"} style={{ height: index >= orderItems.length - 4 ? "120px" : "40px" }}>
                     <td className="border border-gray-400 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
                       {isPdfMode ? (
                         item.ps ? <span className="text-xs">✓</span> : null
@@ -1130,15 +1143,16 @@ const OrderForm = () => {
 
           {/* Signature */}
           <div className="flex justify-end mt-4">
-            <div className="text-center text-sm">
-              <span>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
+            <div className="text-center" style={fontSize12Style}>
+              <span style={fontSize12Style}>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
               {isPdfMode ? (
-                <span className="text-sm border-b border-black min-w-48 min-h-[24px] inline-flex items-end mx-2">{signature}</span>
+                <span className="border-b border-black min-w-48 h-[28px] inline-flex items-end pb-1 mx-2" style={fontSize12Style}>{signature}</span>
               ) : (
                 <Input
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
-                  className="w-48 h-6 text-sm border-b border-black border-t-0 border-l-0 border-r-0 rounded-none mx-2 inline-block bg-transparent"
+                  className="w-48 h-[28px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none mx-2 inline-block bg-transparent pb-1"
+                  style={fontSize12Style}
                 />
               )}
             </div>
