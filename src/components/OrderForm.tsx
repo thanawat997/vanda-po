@@ -12,7 +12,8 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import logo from "@/assets/logo.png";
 
-// Common styles for font size 12pt
+// Common styles for fonts
+const fontSize11Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" };
 const fontSize12Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "12pt" };
 
 // SVG component for rotated text that works with html2canvas
@@ -483,8 +484,7 @@ const OrderForm = () => {
           ref={formRef} 
           className="bg-white p-6 shadow-lg mx-auto overflow-auto" 
           style={{ 
-            fontFamily: "'Angsana New', 'TH Sarabun New', serif",
-            fontSize: "12pt",
+            ...fontSize11Style,
             width: `${a4Width}px`,
             minHeight: `${a4Height}px`,
             aspectRatio: "297 / 210"
@@ -492,19 +492,19 @@ const OrderForm = () => {
         >
           {/* Header */}
           <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" style={fontSize11Style}>
               <img src={logo} alt="Logo" className="h-8 w-auto object-contain" />
-              <span className="text-sm">บริษัทแวนด้าแพค จำกัด</span>
+              <span style={fontSize11Style}>บริษัทแวนด้าแพค จำกัด</span>
             </div>
             <div className="text-center flex-1">
               <h1 className="font-bold text-black" style={{ fontSize: "18pt" }}>
                 ใบบันทึกการรับการสั่งซื้อ (ผลิตภัณฑ์บรรจุภัณฑ์)
               </h1>
             </div>
-            <div className="text-right" style={{ fontSize: "8pt" }}>
+            <div className="text-right" style={fontSize11Style}>
               <div>FM-PPS-02 REV.03</div>
-              <div className="flex items-center gap-1 mt-1" style={fontSize12Style}>
-                <span>No.</span>
+              <div className="flex items-center gap-1 mt-1" style={fontSize11Style}>
+                <span style={fontSize11Style}>No.</span>
                 {isPdfMode ? (
                   <span className="border-b border-black min-w-32 h-[32px] inline-flex items-end pb-2 text-left" style={fontSize12Style}>{formData.orderNumber}</span>
                 ) : (
@@ -520,8 +520,8 @@ const OrderForm = () => {
           </div>
 
           {/* Order Type */}
-          <div className="flex items-center gap-6 mb-3 flex-wrap" style={fontSize12Style}>
-            <div className="font-bold" style={fontSize12Style}>ประเภท</div>
+          <div className="flex items-center gap-6 mb-3 flex-wrap" style={fontSize11Style}>
+            <div className="font-bold" style={fontSize11Style}>ประเภท</div>
             <label className="flex items-baseline gap-2">
               <input
                 type="checkbox"
@@ -531,7 +531,7 @@ const OrderForm = () => {
                 }
                 className="w-4 h-4 border-2 border-black accent-black relative top-[2px]"
               />
-              <span style={fontSize12Style}>โทรศัพท์</span>
+              <span style={fontSize11Style}>โทรศัพท์</span>
             </label>
             <label className="flex items-baseline gap-2">
               <input
@@ -542,7 +542,7 @@ const OrderForm = () => {
                 }
                 className="w-4 h-4 border-2 border-black accent-black relative top-[2px]"
               />
-              <span style={fontSize12Style}>ใบสั่งซื้อ PO. No.</span>
+              <span style={fontSize11Style}>ใบสั่งซื้อ PO. No.</span>
               {isPdfMode ? (
                 <span className="border-b border-black min-w-32 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>{formData.poNumber}</span>
               ) : (
@@ -563,7 +563,7 @@ const OrderForm = () => {
                 }
                 className="w-4 h-4 border-2 border-black accent-black relative top-[2px]"
               />
-              <span style={fontSize12Style}>อื่นๆ</span>
+              <span style={fontSize11Style}>อื่นๆ</span>
               {isPdfMode ? (
                 <span className="border-b border-black min-w-40 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>{formData.otherText}</span>
               ) : (
@@ -578,9 +578,9 @@ const OrderForm = () => {
           </div>
 
           {/* Customer Info */}
-          <div className="flex items-center gap-4 mb-3 flex-wrap" style={fontSize12Style}>
+          <div className="flex items-center gap-4 mb-3 flex-wrap" style={fontSize11Style}>
             <div className="flex items-center gap-2">
-              <span style={fontSize12Style}>ชื่อลูกค้า</span>
+              <span style={fontSize11Style}>ชื่อลูกค้า</span>
               {isPdfMode ? (
                 <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>{formData.customerName}</span>
               ) : (
@@ -593,7 +593,7 @@ const OrderForm = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span style={fontSize12Style}>วันที่</span>
+              <span style={fontSize11Style}>วันที่</span>
               {isPdfMode ? (
                 <span className="border-b border-black px-2 min-w-32 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>
                   {formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : ''}
@@ -635,7 +635,7 @@ const OrderForm = () => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span style={fontSize12Style}>บุคคลที่ติดต่อ</span>
+              <span style={fontSize11Style}>บุคคลที่ติดต่อ</span>
               {isPdfMode ? (
                 <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>{formData.contactPerson}</span>
               ) : (
@@ -651,53 +651,53 @@ const OrderForm = () => {
 
           {/* Main Table */}
           <div className="border-2 border-black overflow-x-auto" style={{ borderColor: 'black' }}>
-            <table className="w-full border-collapse" style={{ borderSpacing: 0, ...fontSize12Style }}>
+            <table className="w-full border-collapse" style={{ borderSpacing: 0, ...fontSize11Style }}>
               <thead>
                 {/* Row 1: Main headers */}
                 <tr>
-                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={4} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={4} style={fontSize11Style}>
                     ชนิดวัตถุดิบ
                   </th>
-                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={5} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={5} style={fontSize11Style}>
                     คุณลักษณะการใช้งาน
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3} style={fontSize12Style}>ชนิดสินค้า</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3} style={fontSize12Style}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-50 min-w-50 max-w-50" rowSpan={3} style={fontSize12Style}>รายละเอียด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3} style={fontSize11Style}>ชนิดสินค้า</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3} style={fontSize11Style}>ขนาด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-50 min-w-50 max-w-50" rowSpan={3} style={fontSize11Style}>รายละเอียด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
                     <div>จำนวน</div>
                     <div>การสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
                     <div>ราคา@</div>
                     <div>(บาท)</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
                     <div>วัน</div>
                     <div>กำหนด</div>
                     <div>ส่ง</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
                     <div>ส่งได้</div>
                     <div>ตาม</div>
                     <div>กำหนด</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
                     <div>ส่งไม่ได้</div>
                     <div>ตาม</div>
                     <div>กำหนด</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
                     <div>ประเทศ</div>
                     <div>ที่</div>
                     <div>ส่งออก</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={2} style={fontSize12Style}>
+                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={2} style={fontSize11Style}>
                     <div>กฎหมาย</div>
                     <div>อ้างอิง</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize12Style}>หมายเหตุ</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>หมายเหตุ</th>
                 </tr>
                 {/* Row 2: Material types and usage categories */}
                 <tr>
@@ -1152,8 +1152,8 @@ const OrderForm = () => {
 
           {/* Signature */}
           <div className="flex justify-end mt-4">
-            <div className="text-center" style={fontSize12Style}>
-              <span style={fontSize12Style}>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
+            <div className="text-center" style={fontSize11Style}>
+              <span style={fontSize11Style}>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
               {isPdfMode ? (
                 <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2 mx-2" style={fontSize12Style}>{signature}</span>
               ) : (
@@ -1168,7 +1168,7 @@ const OrderForm = () => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-between mt-3 text-gray-600" style={{ fontSize: "8pt" }}>
+          <div className="flex justify-between mt-3 text-gray-600" style={fontSize11Style}>
             <div>&quot;Electronic Document Control But UnControlled When Printed Out เอกสารจะไม่ควบคุม เมื่อพิมพ์ออกมาแล้ว&quot;</div>
             <div>ED : 24/4/2024</div>
           </div>
