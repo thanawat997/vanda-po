@@ -506,13 +506,13 @@ const OrderForm = () => {
               <div className="flex items-center gap-1 mt-1" style={fontSize11Style}>
                 <span style={fontSize11Style}>No.</span>
                 {isPdfMode ? (
-                  <span className="border-b border-black min-w-32 h-[32px] inline-flex items-end pb-2 text-left" style={fontSize12Style}>{formData.orderNumber}</span>
+                <span className="border-b border-black min-w-32 h-[32px] inline-flex items-end pb-2 text-left" style={fontSize11Style}>{formData.orderNumber}</span>
                 ) : (
                   <Input
                     value={formData.orderNumber}
                     onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
                     className="w-32 h-[32px] text-left border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                    style={fontSize12Style}
+                    style={fontSize11Style}
                   />
                 )}
               </div>
@@ -544,13 +544,13 @@ const OrderForm = () => {
               />
               <span style={fontSize11Style}>ใบสั่งซื้อ PO. No.</span>
               {isPdfMode ? (
-                <span className="border-b border-black min-w-32 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>{formData.poNumber}</span>
+                <span className="border-b border-black min-w-32 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>{formData.poNumber}</span>
               ) : (
                 <Input
                   value={formData.poNumber}
                   onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })}
                   className="w-32 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                  style={fontSize12Style}
+                  style={fontSize11Style}
                 />
               )}
             </label>
@@ -565,13 +565,13 @@ const OrderForm = () => {
               />
               <span style={fontSize11Style}>อื่นๆ</span>
               {isPdfMode ? (
-                <span className="border-b border-black min-w-40 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>{formData.otherText}</span>
+                <span className="border-b border-black min-w-40 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>{formData.otherText}</span>
               ) : (
                 <Input
                   value={formData.otherText}
                   onChange={(e) => setFormData({ ...formData, otherText: e.target.value })}
                   className="w-40 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                  style={fontSize12Style}
+                  style={fontSize11Style}
                 />
               )}
             </label>
@@ -582,20 +582,20 @@ const OrderForm = () => {
             <div className="flex items-center gap-2">
               <span style={fontSize11Style}>ชื่อลูกค้า</span>
               {isPdfMode ? (
-                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>{formData.customerName}</span>
+                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>{formData.customerName}</span>
               ) : (
                 <Input
                   value={formData.customerName}
                   onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                   className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                  style={fontSize12Style}
+                  style={fontSize11Style}
                 />
               )}
             </div>
             <div className="flex items-center gap-2">
               <span style={fontSize11Style}>วันที่</span>
               {isPdfMode ? (
-                <span className="border-b border-black px-2 min-w-32 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>
+                <span className="border-b border-black px-2 min-w-32 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>
                   {formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : ''}
                 </span>
               ) : (
@@ -607,7 +607,7 @@ const OrderForm = () => {
                       "w-36 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent justify-start text-left font-normal px-0 hover:bg-transparent pb-2",
                       !formData.date && "text-muted-foreground"
                     )}
-                    style={fontSize12Style}
+                    style={fontSize11Style}
                   >
                     {formData.date ? (
                       format(formData.date, "dd/MM/yyyy", { locale: th })
@@ -637,13 +637,13 @@ const OrderForm = () => {
             <div className="flex items-center gap-2">
               <span style={fontSize11Style}>บุคคลที่ติดต่อ</span>
               {isPdfMode ? (
-                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2" style={fontSize12Style}>{formData.contactPerson}</span>
+                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>{formData.contactPerson}</span>
               ) : (
                 <Input
                   value={formData.contactPerson}
                   onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                   className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                  style={fontSize12Style}
+                  style={fontSize11Style}
                 />
               )}
             </div>
@@ -1155,13 +1155,13 @@ const OrderForm = () => {
             <div className="text-center" style={fontSize11Style}>
               <span style={fontSize11Style}>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
               {isPdfMode ? (
-                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2 mx-2" style={fontSize12Style}>{signature}</span>
+                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2 mx-2" style={fontSize11Style}>{signature}</span>
               ) : (
                 <Input
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
                   className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none mx-2 inline-block bg-transparent pb-2"
-                  style={fontSize12Style}
+                  style={fontSize11Style}
                 />
               )}
             </div>
