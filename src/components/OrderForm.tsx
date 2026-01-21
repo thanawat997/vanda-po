@@ -766,9 +766,16 @@ const OrderForm = () => {
                 </tr>
               </thead>
               <tbody>
-                {orderItems.map((item, index) => (
-                  <tr key={index} className={index >= orderItems.length - 4 ? "h-[105px]" : "h-10"} style={{ height: index >= orderItems.length - 4 ? "105px" : "40px", fontFamily: index >= orderItems.length - 4 ? "'Angsana New', 'TH Sarabun New', serif" : undefined, fontSize: index >= orderItems.length - 4 ? "11pt" : undefined }}>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                {orderItems.map((item, index) => {
+                  const isBottomRow = index >= orderItems.length - 4;
+                  const rowHeightStyle = isBottomRow
+                    ? { height: "105px", minHeight: "105px", fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" }
+                    : { height: "40px" };
+                  const cellHeightStyle = isBottomRow ? { height: "105px", minHeight: "105px" } : undefined;
+
+                  return (
+                  <tr key={index} className={isBottomRow ? "h-[105px]" : "h-10"} style={rowHeightStyle}>
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.ps ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -780,7 +787,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.pp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -792,7 +799,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.pet ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -804,7 +811,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.pla ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -816,7 +823,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.hotFood ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -828,7 +835,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.normalTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -840,7 +847,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.coldTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -852,7 +859,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.freezeTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -864,7 +871,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.otherUsage ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -876,7 +883,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openProductTypeDropdownIndex === index} onOpenChange={(open) => setOpenProductTypeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -925,7 +932,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openSizeDropdownIndex === index} onOpenChange={(open) => setOpenSizeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -974,7 +981,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-50 min-w-50 max-w-50 relative group align-middle">
+                    <td className="border border-black/40 p-1 h-10 w-50 min-w-50 max-w-50 relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
                           <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
@@ -1026,7 +1033,7 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle">
+                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{getQuantityForPdf(item.quantity)}</span>
                       ) : (
@@ -1040,7 +1047,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle">
+                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{item.price}</span>
                       ) : (
@@ -1058,7 +1065,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle">
+                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs text-center block">{item.deliveryDate}</span>
                       ) : (
@@ -1069,7 +1076,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle">
+                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.deliverableNote}</span>
                       ) : (
@@ -1080,7 +1087,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle">
+                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.notDeliverableNote}</span>
                       ) : (
@@ -1091,7 +1098,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle">
+                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs text-left block">{item.exportType}</span>
                       ) : (
@@ -1102,7 +1109,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 text-center align-middle">
+                    <td className="border border-black/40 p-1 h-10 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs">{item.thai}</span>
                       ) : (
@@ -1113,7 +1120,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle">
+                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs">{item.lawRef}</span>
                       ) : (
@@ -1124,7 +1131,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle">
+                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         <span className="text-xs">{item.notes}</span>
                       ) : (
@@ -1136,7 +1143,8 @@ const OrderForm = () => {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
