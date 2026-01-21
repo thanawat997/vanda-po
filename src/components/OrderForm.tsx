@@ -768,13 +768,14 @@ const OrderForm = () => {
               <tbody>
                 {orderItems.map((item, index) => {
                   const isBottomRow = index >= orderItems.length - 4;
+                  const bottomRowHeightStyle = { height: "95px", minHeight: "95px" };
                   const rowHeightStyle = isBottomRow
-                    ? { height: "105px", minHeight: "105px", fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" }
+                    ? { ...bottomRowHeightStyle, fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" }
                     : { height: "40px" };
-                  const cellHeightStyle = isBottomRow ? { height: "105px", minHeight: "105px" } : undefined;
+                  const cellHeightStyle = isBottomRow ? bottomRowHeightStyle : undefined;
 
                   return (
-                  <tr key={index} className={isBottomRow ? "h-[105px]" : "h-10"} style={rowHeightStyle}>
+                  <tr key={index} className={isBottomRow ? "h-[95px]" : "h-10"} style={rowHeightStyle}>
                     <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.ps ? <span className="text-xs">✓</span> : null
