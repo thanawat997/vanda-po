@@ -15,17 +15,26 @@ import logo from "@/assets/logo.png";
 // Common styles for fonts
 const fontSize11Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" };
 const fontSize12Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "12pt" };
+const fontSize9Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "9pt" };
+const fontSize8Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "8pt" };
 
 // SVG component for rotated text that works with html2canvas
 interface RotatedTextSVGProps {
   lines: string[];
   height?: number;
   width?: number;
-  fontSize?: number;
+  fontSize?: number | string;
 }
 
 const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 11 }: RotatedTextSVGProps) => {
-  const lineHeight = fontSize + 2;
+  const fontSizePx =
+    typeof fontSize === "number"
+      ? fontSize
+      : fontSize.trim().endsWith("pt")
+        ? (parseFloat(fontSize) * 4) / 3
+        : parseFloat(fontSize);
+
+  const lineHeight = fontSizePx + 2;
   const totalTextHeight = lines.length * lineHeight;
   const startY = (height + totalTextHeight) / 2 - lineHeight / 2;
   
@@ -34,7 +43,7 @@ const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 11 }: Rotat
       width={width} 
       height={height} 
       viewBox={`0 0 ${width} ${height}`}
-      style={{ display: 'block' }}
+      style={{ display: "block", overflow: "visible", color: "inherit" }}
     >
       <g transform={`rotate(-90, ${width / 2}, ${height / 2})`}>
         {lines.map((line, index) => (
@@ -44,8 +53,9 @@ const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 11 }: Rotat
             y={startY - (lines.length - 1 - index) * lineHeight}
             textAnchor="middle"
             fontSize={fontSize}
+            dominantBaseline="middle"
             fontFamily="'Angsana New', 'TH Sarabun New', serif"
-            fill="black"
+            fill="currentColor"
           >
             {line}
           </text>
@@ -650,115 +660,139 @@ const OrderForm = () => {
           </div>
 
           {/* Main Table */}
-          <div className="border-2 border-black overflow-x-auto" style={{ borderColor: 'black' }}>
-            <table className="w-full border-collapse" style={{ borderSpacing: 0, ...fontSize11Style }}>
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed border-collapse border border-black" style={{ borderSpacing: 0, ...fontSize11Style }}>
+              <colgroup>
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "32px" }} />
+                <col style={{ width: "60px" }} />
+                <col style={{ width: "60px" }} />
+                <col style={{ width: "192px" }} />
+                <col style={{ width: "85px" }} />
+                <col style={{ width: "60px" }} />
+                <col style={{ width: "40px" }} />
+                <col style={{ width: "40px" }} />
+                <col style={{ width: "65px" }} />
+                <col style={{ width: "35px" }} />
+                <col style={{ width: "25px" }} />
+                <col style={{ width: "25px" }} />
+                <col style={{ width: "60px" }} />
+              </colgroup>
               <thead>
                 {/* Row 1: Main headers */}
                 <tr>
-                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={4} style={fontSize11Style}>
+                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={4} style={fontSize9Style}>
                     ชนิดวัตถุดิบ
                   </th>
-                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={5} style={fontSize11Style}>
+                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={5} style={fontSize9Style}>
                     คุณลักษณะการใช้งาน
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3} style={fontSize11Style}>ชนิดสินค้า</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-12 min-w-12 max-w-12" rowSpan={3} style={fontSize11Style}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-50 min-w-50 max-w-50" rowSpan={3} style={fontSize11Style}>รายละเอียด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
-                    <div>จำนวน</div>
-                    <div>การสั่งซื้อ</div>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[60px]" rowSpan={3} style={fontSize9Style}>ชนิดสินค้า</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[60px]" rowSpan={3} style={fontSize9Style}>ขนาด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[192px]" rowSpan={3} style={fontSize9Style}>รายละเอียด</th>
+                  <th className="border border-black p-0 text-center align-middle font-normal w-[85px]" rowSpan={3} style={fontSize9Style}>
+                    <div className="whitespace-nowrap">จำนวนการสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[60px]" rowSpan={3} style={fontSize9Style}>
                     <div>ราคา@</div>
                     <div>(บาท)</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
+                  <th className="border border-black p-0 text-center align-middle font-normal w-[40px]" rowSpan={3} style={fontSize9Style}>
                     <div>วัน</div>
                     <div>กำหนด</div>
                     <div>ส่ง</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
+                  <th className="border border-black p-0 text-center align-middle font-normal w-[40px]" rowSpan={3} style={fontSize9Style}>
                     <div>ส่งได้</div>
                     <div>ตาม</div>
                     <div>กำหนด</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[65px]" rowSpan={3} style={fontSize9Style}>
                     <div>ส่งไม่ได้</div>
                     <div>ตาม</div>
                     <div>กำหนด</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>
-                    <div>ประเทศ</div>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[35px]" rowSpan={3} style={fontSize9Style}>
+                    <div>ประเ</div>
+                    <div>ทศ</div>
                     <div>ที่</div>
-                    <div>ส่งออก</div>
+                    <div>ส่งอ</div>
+                    <div>อก</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={2} style={fontSize11Style}>
+                  <th className="border border-black p-1 text-center align-top font-normal" colSpan={2} style={fontSize8Style}>
                     <div>กฎหมาย</div>
                     <div>อ้างอิง</div>
                   </th>
-                  <th className="border border-black p-1 text-center align-middle font-normal" rowSpan={3} style={fontSize11Style}>หมายเหตุ</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[60px]" rowSpan={3} style={fontSize9Style}>หมายเหตุ</th>
                 </tr>
                 {/* Row 2: Material types and usage categories */}
                 <tr>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-8 min-w-8 max-w-8" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PS</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-8 min-w-8 max-w-8" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PP</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-8 min-w-8 max-w-8" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PET</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-8 min-w-8 max-w-8" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PLA</th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PS</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PP</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PET</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PLA</th>
+                  <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["ใส่ของร้อน", "(ที่อุณหภูมิ 45 - 70 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["ที่อุณหภูมิปกติ", "(ที่อุณหภูมิ 25 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["ที่อุณหภูมิแช่เย็น", "(ที่อุณหภูมิ 0 -10 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["ที่อุณหภูมิแช่แข็ง", "(ที่อุณหภูมิ -1 ถึง -80 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
+                  <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["อื่นๆ"]} height={90} width={30} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
-                    <div className="h-16 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ไทย"]} height={60} width={30} />
+                  <th className="border border-black p-1 text-center font-normal w-[25px]" rowSpan={2}>
+                    <div className="h-28 flex items-center justify-center">
+                      <RotatedTextSVG lines={["ไทย"]} height={112} width={25} fontSize="10pt" />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal w-8 min-w-8 max-w-8" rowSpan={2}>
-                    <div className="h-16 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ต่างประเทศ", "(ระบุ)"]} height={60} width={30} />
+                  <th className="border border-black p-1 text-center font-normal w-[25px]" rowSpan={2}>
+                    <div className="h-28 flex items-center justify-center">
+                      <RotatedTextSVG lines={["ต่างประเทศ(ระบุ)"]} height={112} width={25} fontSize="10pt" />
                     </div>
                   </th>
                 </tr>
                 {/* Row 3: Temperature descriptions (rotated with line breaks) */}
                 <tr>
-                  <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
+                  <th className="border border-black p-1 text-center font-normal h-24 w-[32px]">
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-20 C° ถึง 80 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
+                  <th className="border border-black p-1 text-center font-normal h-24 w-[32px]">
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 100 C°/120 C°(M))"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
+                  <th className="border border-black p-1 text-center font-normal h-24 w-[32px]">
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 70 C°)"]} height={90} width={32} />
                     </div>
                   </th>
-                  <th className="border border-black p-1 text-center font-normal h-24 w-8 min-w-8 max-w-8">
+                  <th className="border border-black p-1 text-center font-normal h-24 w-[32px]">
                     <div className="h-24 flex items-center justify-center">
                       <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "0 C° ถึง 50 C°)"]} height={90} width={32} />
                     </div>
@@ -776,7 +810,7 @@ const OrderForm = () => {
 
                   return (
                   <tr key={index} className={isBottomRow ? "h-[80px]" : "h-10"} style={rowHeightStyle}>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.ps ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -788,7 +822,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.pp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -800,7 +834,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.pet ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -812,7 +846,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.pla ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -824,7 +858,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.hotFood ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -836,7 +870,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.normalTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -848,7 +882,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.coldTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -860,7 +894,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.freezeTemp ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -872,7 +906,7 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-8 min-w-8 max-w-8 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
                       {isPdfMode ? (
                         item.otherUsage ? <span className="text-xs">✓</span> : null
                       ) : (
@@ -884,10 +918,10 @@ const OrderForm = () => {
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[60px] relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openProductTypeDropdownIndex === index} onOpenChange={(open) => setOpenProductTypeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
+                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
                             <span className="flex-1">{item.productType || ''}</span>
                             {!isPdfMode && (
                               <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
@@ -933,10 +967,10 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-12 min-w-12 max-w-12 relative group align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[60px] relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openSizeDropdownIndex === index} onOpenChange={(open) => setOpenSizeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
+                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
                             <span className="flex-1">{item.size || ''}</span>
                             {!isPdfMode && (
                               <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
@@ -982,10 +1016,10 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 w-50 min-w-50 max-w-50 relative group align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 w-[192px] relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="min-h-6 cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
+                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
                             <span className="flex-1">{item.details || ''}</span>
                             {!isPdfMode && (
                               <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
@@ -1034,9 +1068,9 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 align-middle w-[85px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs text-center block">{getQuantityForPdf(item.quantity)}</span>
+                        <span className="text-xs text-center block w-full">{getQuantityForPdf(item.quantity)}</span>
                       ) : (
                         <Input
                           value={item.quantity}
@@ -1044,13 +1078,13 @@ const OrderForm = () => {
                             const formatted = formatQuantityDisplay(e.target.value);
                             updateOrderItem(index, "quantity", formatted);
                           }}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 align-middle w-[60px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs text-center block">{item.price}</span>
+                        <span className="text-xs text-center block w-full">{item.price}</span>
                       ) : (
                         <Input
                           value={item.price}
@@ -1062,84 +1096,84 @@ const OrderForm = () => {
                             const formatted = formatPrice(item.price);
                             updateOrderItem(index, "price", formatted);
                           }}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 align-middle w-[40px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs text-center block">{item.deliveryDate}</span>
+                        <span className="text-xs text-center block w-full">{item.deliveryDate}</span>
                       ) : (
                         <Input
                           value={item.deliveryDate}
                           onChange={(e) => updateOrderItem(index, "deliveryDate", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 align-middle w-[40px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs text-left block">{item.deliverableNote}</span>
+                        <span className="text-xs text-left block w-full">{item.deliverableNote}</span>
                       ) : (
                         <Input
                           value={item.deliverableNote}
                           onChange={(e) => updateOrderItem(index, "deliverableNote", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 align-middle w-[65px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs text-left block">{item.notDeliverableNote}</span>
+                        <span className="text-xs text-left block w-full">{item.notDeliverableNote}</span>
                       ) : (
                         <Input
                           value={item.notDeliverableNote}
                           onChange={(e) => updateOrderItem(index, "notDeliverableNote", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 align-middle w-[35px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs text-left block">{item.exportType}</span>
+                        <span className="text-xs text-left block w-full">{item.exportType}</span>
                       ) : (
                         <Input
                           value={item.exportType}
                           onChange={(e) => updateOrderItem(index, "exportType", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 text-center align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 text-center align-middle w-[25px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs">{item.thai}</span>
+                        <span className="text-xs block w-full">{item.thai}</span>
                       ) : (
                         <Input
                           value={item.thai}
                           onChange={(e) => updateOrderItem(index, "thai", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 align-middle w-[25px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs">{item.lawRef}</span>
+                        <span className="text-xs block w-full">{item.lawRef}</span>
                       ) : (
                         <Input
                           value={item.lawRef}
                           onChange={(e) => updateOrderItem(index, "lawRef", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent rounded-none"
                         />
                       )}
                     </td>
-                    <td className="border border-black/40 p-1 h-10 align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-0 h-10 align-middle w-[60px]" style={cellHeightStyle}>
                       {isPdfMode ? (
-                        <span className="text-xs">{item.notes}</span>
+                        <span className="text-xs block w-full">{item.notes}</span>
                       ) : (
                         <Input
                           value={item.notes}
                           onChange={(e) => updateOrderItem(index, "notes", e.target.value)}
-                          className="h-6 text-xs border-0 p-0 focus-visible:ring-0 bg-transparent"
+                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent rounded-none"
                         />
                       )}
                     </td>
