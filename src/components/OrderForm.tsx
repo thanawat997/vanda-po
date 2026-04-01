@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Download, Plus, CalendarIcon, Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -9,7 +10,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import logo from "@/assets/logo.png";
 
 // Common styles for fonts
@@ -18,7 +19,7 @@ const fontSize12Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", 
 const fontSize9Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "9pt" };
 const fontSize8Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "8pt" };
 
-// SVG component for rotated text that works with html2canvas
+// SVG component for rotated text
 interface RotatedTextSVGProps {
   lines: string[];
   height?: number;
@@ -36,7 +37,11 @@ const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 11 }: Rotat
 
   const lineHeight = fontSizePx + 2;
   const totalTextHeight = lines.length * lineHeight;
-  const startY = (height + totalTextHeight) / 2 - lineHeight / 2;
+  const baseStartY = (height + totalTextHeight) / 2 - lineHeight / 2;
+  const padding = Math.max(2, fontSizePx * 0.9);
+  const minStartY = padding + (lines.length - 1) * lineHeight;
+  const maxStartY = height - padding;
+  const startY = Math.min(maxStartY, Math.max(minStartY, baseStartY));
   
   return (
     <svg 
@@ -53,7 +58,7 @@ const RotatedTextSVG = ({ lines, height = 90, width = 40, fontSize = 11 }: Rotat
             y={startY - (lines.length - 1 - index) * lineHeight}
             textAnchor="middle"
             fontSize={fontSize}
-            dominantBaseline="middle"
+            dominantBaseline="central"
             fontFamily="'Angsana New', 'TH Sarabun New', serif"
             fill="currentColor"
           >
@@ -72,14 +77,6 @@ const formatQuantityDisplay = (value: string): string => {
   return parseInt(num, 10).toLocaleString('en-US');
 };
 
-// Parse quantity back to raw number for PDF
-const getQuantityForPdf = (value: string): string => {
-  const num = value.replace(/[^0-9]/g, '');
-  if (!num) return '';
-  // Use regex to add commas manually instead of toLocaleString
-  return num.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-};
-
 // Format number with commas and 2 decimal places
 const formatPrice = (value: string): string => {
   const cleanValue = value.replace(/[^0-9.]/g, '');
@@ -90,8 +87,7 @@ const formatPrice = (value: string): string => {
   return `${intPart}.${decPart}`;
 };
 
-// Size options for dropdown
-const sizeOptions = [
+const defaultSizeOptions = [
   "1oz. (BK)", "1.5oz. (BK)", "2oz. D.62 ทรงสูง (BK)", "2oz. D.62 ทรงเตี้ย (BK)", 
   "3oz. D.75 (BK)", "3oz. D.78 (BK)", "4.7oz. D.78 (BK)", "8oz. D.78 (BK)", 
   "10oz. D.90 (BK)", "10oz. D.95 (BK)", "12oz. D.95 (BK)", "450 ml.", "K500 ml.", 
@@ -113,11 +109,11 @@ const sizeOptions = [
   "ชามแดง750 ml.", "ชามดำ750 & Inner", "ชามแดง750 & Inner"
 ];
 
-// Product type options for dropdown
-const productTypeOptions = ["SD", "LID", "Tub", "Bowl"];
+const defaultProductTypeOptions = ["SD", "LID", "Tub", "Bowl"];
 
-// Product list for dropdown
-const productOptions = [
+type ProductOption = { name: string; code: string };
+
+const defaultProductOptions: ProductOption[] = [
   { name: "ถ้วยเบเกอรี่ PET 2 ออนซ์ ปาก 62 พร้อมฝา ทรงสูง (Pack 2,000 set)", code: "S1103026A005" },
   { name: "ถ้วยเบเกอรี่ PET 2 ออนซ์ ปาก 62 พร้อมฝา ทรงเตี้ย (Pack 2,000 set)", code: "S1103026A006" },
   { name: "ถ้วยเบเกอรี่ PET 3 ออนซ์ ปาก 75 พร้อมฝา (Pack 2,000 set)", code: "S1103037A000" },
@@ -355,6 +351,8 @@ const productOptions = [
   { name: 'SD 22 oz. D.95 PP "BOOM BOOM TEA"(NEW) (Pack Tube)', code: "F1202229P023" },
 ];
 
+const defaultProductDropdownOptions = defaultProductOptions.map((p) => `${p.name} // ${p.code}`);
+
 interface OrderItem {
   ps: boolean;
   pp: boolean;
@@ -426,44 +424,122 @@ const OrderForm = () => {
   const [openSizeDropdownIndex, setOpenSizeDropdownIndex] = useState<number | null>(null);
   const [openProductTypeDropdownIndex, setOpenProductTypeDropdownIndex] = useState<number | null>(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [dropdownOptions, setDropdownOptions] = useState<{
+    productTypeOptions: string[];
+    sizeOptions: string[];
+    productOptions: string[];
+  }>({
+    productTypeOptions: defaultProductTypeOptions,
+    sizeOptions: defaultSizeOptions,
+    productOptions: defaultProductDropdownOptions,
+  });
+  const [dropdownsError, setDropdownsError] = useState<string | null>(null);
+  const [dropdownsLoading, setDropdownsLoading] = useState(false);
+  const [isDropdownManagerOpen, setIsDropdownManagerOpen] = useState(false);
+  const [newProductTypeValue, setNewProductTypeValue] = useState("");
+  const [newSizeValue, setNewSizeValue] = useState("");
+  const [newProductValue, setNewProductValue] = useState("");
 
-  const [isPdfMode, setIsPdfMode] = useState(false);
+  const apiJson = useCallback(async <T,>(url: string, init: RequestInit = {}): Promise<T> => {
+    const apiBaseRaw = (import.meta.env as { VITE_API_BASE?: string }).VITE_API_BASE ?? "";
+    const apiBase = apiBaseRaw.replace(/\/+$/, "");
+    const fullUrl = apiBase ? `${apiBase}${url.startsWith("/") ? url : `/${url}`}` : url;
 
-  const handleDownloadPDF = async () => {
-    if (!formRef.current) return;
-
-    // Set PDF mode to hide checkboxes and dropdown arrows
-    setIsPdfMode(true);
-    
-    // Wait for state to update
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    const canvas = await html2canvas(formRef.current, {
-      scale: 1.5,
-      useCORS: true,
-      backgroundColor: "#ffffff",
+    const res = await fetch(fullUrl, {
+      ...init,
+      headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
     });
+    const text = await res.text();
+    let data: unknown = null;
+    try {
+      data = text ? (JSON.parse(text) as unknown) : null;
+    } catch {
+      data = null;
+    }
 
-    // Reset PDF mode
-    setIsPdfMode(false);
+    if (!res.ok) {
+      const message =
+        typeof data === "object" && data && "error" in data
+          ? String((data as { error: unknown }).error)
+          : text || "Request failed";
+      throw new Error(message);
+    }
 
-    const imgData = canvas.toDataURL("image/jpeg", 0.85);
-    const pdf = new jsPDF({
-      orientation: "landscape",
-      unit: "mm",
-      format: "a4",
-    });
+    return data as T;
+  }, []);
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-    const imgX = (pdfWidth - imgWidth * ratio) / 2;
-    const imgY = 5;
+  const loadDropdowns = useCallback(async () => {
+    setDropdownsLoading(true);
+    setDropdownsError(null);
+    try {
+      const data = await apiJson<{
+        productTypes: string[];
+        sizes: string[];
+        products: string[];
+      }>("/api/dropdowns");
 
-    pdf.addImage(imgData, "JPEG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-    pdf.save("ใบบันทึกการรับการสั่งซื้อ.pdf");
+      setDropdownOptions({
+        productTypeOptions: Array.isArray(data.productTypes) ? data.productTypes : defaultProductTypeOptions,
+        sizeOptions: Array.isArray(data.sizes) ? data.sizes : defaultSizeOptions,
+        productOptions: Array.isArray(data.products) ? data.products : defaultProductDropdownOptions,
+      });
+    } catch (err) {
+      setDropdownsError(err instanceof Error ? err.message : "Failed to load dropdowns");
+    } finally {
+      setDropdownsLoading(false);
+    }
+  }, [apiJson]);
+
+  useEffect(() => {
+    void loadDropdowns();
+  }, [loadDropdowns]);
+
+  useEffect(() => {
+    if (!isDropdownManagerOpen) return;
+    const intervalId = window.setInterval(() => {
+      void loadDropdowns();
+    }, 5000);
+    return () => window.clearInterval(intervalId);
+  }, [isDropdownManagerOpen, loadDropdowns]);
+
+  const addProductType = async () => {
+    const value = newProductTypeValue.trim();
+    if (!value) return;
+    await apiJson("/api/dropdowns/product-types", { method: "POST", body: JSON.stringify({ value }) });
+    setNewProductTypeValue("");
+    await loadDropdowns();
+  };
+
+  const deleteProductType = async (value: string) => {
+    await apiJson("/api/dropdowns/product-types/delete", { method: "POST", body: JSON.stringify({ value }) });
+    await loadDropdowns();
+  };
+
+  const addSize = async () => {
+    const value = newSizeValue.trim();
+    if (!value) return;
+    await apiJson("/api/dropdowns/sizes", { method: "POST", body: JSON.stringify({ value }) });
+    setNewSizeValue("");
+    await loadDropdowns();
+  };
+
+  const deleteSize = async (value: string) => {
+    await apiJson("/api/dropdowns/sizes/delete", { method: "POST", body: JSON.stringify({ value }) });
+    await loadDropdowns();
+  };
+
+  const addProduct = async () => {
+    const value = newProductValue.trim();
+    if (!value) return;
+    await apiJson("/api/dropdowns/products", { method: "POST", body: JSON.stringify({ value }) });
+    setNewProductValue("");
+    await loadDropdowns();
+  };
+
+  const deleteProduct = async (value: string) => {
+    await apiJson("/api/dropdowns/products/delete", { method: "POST", body: JSON.stringify({ value }) });
+    await loadDropdowns();
   };
 
   const addOrderItem = () => {
@@ -480,18 +556,322 @@ const OrderForm = () => {
   const a4Width = 297 * 3.78; // mm to px at 96dpi
   const a4Height = 210 * 3.78;
 
+  const handleDownloadPdf = async () => {
+    const node = formRef.current;
+    if (!node) return;
+
+    try {
+      setIsDownloadingPdf(true);
+      setIsDropdownManagerOpen(false);
+      setOpenDropdownIndex(null);
+      setOpenSizeDropdownIndex(null);
+      setOpenProductTypeDropdownIndex(null);
+      setIsDatePickerOpen(false);
+
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      if ("fonts" in document) {
+        await (document as Document & { fonts: FontFaceSet }).fonts.ready;
+      }
+
+      const canvas = await html2canvas(node, {
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        scale: Math.max(2, window.devicePixelRatio || 1),
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        onclone: (clonedDoc) => {
+          const clonedNode = clonedDoc.getElementById("order-form-capture");
+          if (!clonedNode) return;
+
+          const styleEl = clonedDoc.createElement("style");
+          styleEl.textContent = `
+            .pdf-hide { display: none !important; }
+            .pdf-no-pad-right { padding-right: 0 !important; }
+          `;
+          clonedDoc.head.appendChild(styleEl);
+
+          const originalFields = node.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+            "input, textarea, select"
+          );
+          const clonedFields = clonedNode.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
+            "input, textarea, select"
+          );
+
+          originalFields.forEach((field, index) => {
+            const clonedField = clonedFields[index];
+            if (!clonedField) return;
+
+            if (field instanceof HTMLInputElement && clonedField instanceof HTMLInputElement) {
+              if (field.type === "checkbox" || field.type === "radio") {
+                clonedField.checked = field.checked;
+              } else {
+                clonedField.value = field.value;
+              }
+              return;
+            }
+
+            if (field instanceof HTMLTextAreaElement && clonedField instanceof HTMLTextAreaElement) {
+              clonedField.value = field.value;
+              return;
+            }
+
+            if (field instanceof HTMLSelectElement && clonedField instanceof HTMLSelectElement) {
+              clonedField.value = field.value;
+            }
+          });
+
+          const replaceWithUnderlinedText = (el: HTMLElement, text: string, shiftUpPx: number) => {
+            const win = clonedDoc.defaultView;
+            if (!win) return;
+            const cs = win.getComputedStyle(el);
+
+            const container = clonedDoc.createElement("span");
+            container.style.display = cs.display === "block" ? "block" : "inline-block";
+            container.style.width = cs.width;
+            container.style.height = cs.height;
+            container.style.boxSizing = "border-box";
+            container.style.verticalAlign = cs.verticalAlign;
+            container.style.fontFamily = cs.fontFamily;
+            container.style.fontSize = cs.fontSize;
+            container.style.fontWeight = cs.fontWeight;
+            container.style.color = cs.color;
+            container.style.textAlign = cs.textAlign;
+            container.style.letterSpacing = cs.letterSpacing;
+            container.style.background = "transparent";
+            container.style.borderBottom = cs.borderBottom;
+            container.style.borderTop = "0";
+            container.style.borderLeft = "0";
+            container.style.borderRight = "0";
+            container.style.paddingLeft = cs.paddingLeft;
+            container.style.paddingRight = cs.paddingRight;
+            container.style.overflow = "visible";
+
+            const inner = clonedDoc.createElement("span");
+            inner.textContent = text;
+            inner.style.display = "inline-block";
+            inner.style.transform = `translateY(-${shiftUpPx}px)`;
+            inner.style.whiteSpace = "pre";
+            inner.style.overflow = "visible";
+            container.appendChild(inner);
+
+            el.replaceWith(container);
+          };
+
+          const dateButton = clonedNode.querySelector<HTMLButtonElement>('[data-pdf-date-trigger="true"]');
+          if (dateButton) {
+            const dateText = formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : "";
+            replaceWithUnderlinedText(dateButton, dateText, -2);
+          }
+
+          const outsideTextInputs = Array.from(clonedNode.querySelectorAll<HTMLInputElement>("input")).filter(
+            (el) => el.type !== "checkbox" && el.type !== "radio" && !el.closest("table")
+          );
+          outsideTextInputs.forEach((el) => {
+            const shiftUpPx = el.getAttribute("data-pdf-skip-shift") === "true" ? 1 : -2;
+            replaceWithUnderlinedText(el, el.value || "", shiftUpPx);
+          });
+
+          const orderTypePhoneEls = clonedNode.querySelectorAll<HTMLElement>('[data-pdf-shift="order-type-phone"]');
+          orderTypePhoneEls.forEach((el) => {
+            el.style.transform = "translateY(-6px)";
+          });
+
+          const materialHeaders = clonedNode.querySelectorAll<HTMLElement>('[data-pdf-shift="material-header-text"]');
+          materialHeaders.forEach((el) => {
+            el.style.transform = "translateY(-5px)";
+          });
+
+          const outsideCheckboxes = Array.from(clonedNode.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')).filter(
+            (el) => !el.closest("table")
+          );
+
+          outsideCheckboxes.forEach((checkbox) => {
+            const box = clonedDoc.createElement("span");
+            box.style.display = "inline-flex";
+            box.style.width = "16px";
+            box.style.height = "16px";
+            box.style.border = "2px solid #000";
+            box.style.alignItems = "center";
+            box.style.justifyContent = "center";
+            box.style.background = "#fff";
+            box.style.color = "#000";
+            box.style.fontSize = "12px";
+            box.style.lineHeight = "1";
+            box.style.transform = "translateY(8px)";
+            if (checkbox.checked) {
+              const tick = clonedDoc.createElement("span");
+              tick.textContent = "✓";
+              tick.style.display = "block";
+              tick.style.transform = "translateY(-7px)";
+              box.appendChild(tick);
+            }
+            checkbox.replaceWith(box);
+          });
+
+          const tableCheckboxes = clonedNode.querySelectorAll<HTMLInputElement>('table input[type="checkbox"]');
+          tableCheckboxes.forEach((checkbox) => {
+            const mark = clonedDoc.createElement("span");
+            mark.textContent = checkbox.checked ? "✓" : "";
+            mark.style.display = "block";
+            mark.style.width = "100%";
+            mark.style.textAlign = "center";
+            mark.style.fontSize = "12px";
+            mark.style.lineHeight = "1";
+            mark.style.fontWeight = "700";
+            checkbox.replaceWith(mark);
+          });
+        },
+      });
+
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+        compress: true,
+      });
+
+      const pageWidthMm = 297;
+      const pageHeightMm = 210;
+      const mmPerCanvasPx = pageWidthMm / canvas.width;
+      const pageHeightPx = pageHeightMm / mmPerCanvasPx;
+
+      let y = 0;
+      let pageIndex = 0;
+      while (y < canvas.height) {
+        const sliceHeightPx = Math.min(pageHeightPx, canvas.height - y);
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceHeightPx;
+        const ctx = sliceCanvas.getContext("2d");
+        if (!ctx) break;
+        ctx.drawImage(canvas, 0, y, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+
+        const imgData = sliceCanvas.toDataURL("image/png");
+        if (pageIndex > 0) pdf.addPage();
+        const sliceHeightMm = sliceHeightPx * mmPerCanvasPx;
+        pdf.addImage(imgData, "PNG", 0, 0, pageWidthMm, sliceHeightMm);
+
+        y += sliceHeightPx;
+        pageIndex += 1;
+      }
+
+      pdf.save("ใบบันทึกการรับการสั่งซื้อ.pdf");
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-muted p-4">
+    <div className="min-h-screen bg-muted p-2 sm:p-4">
       <div className="max-w-[1200px] mx-auto">
-        <div className="flex justify-end mb-4">
-          <Button onClick={handleDownloadPDF} className="gap-2 bg-primary hover:bg-primary/90">
+        <div className="sticky top-0 z-10 flex justify-end gap-2 py-2 mb-2 bg-muted/80 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
+          <Dialog open={isDropdownManagerOpen} onOpenChange={setIsDropdownManagerOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="sm:h-10">
+                จัดการ Dropdown
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-[calc(100vw-1rem)] max-w-none max-h-[90vh] overflow-y-auto sm:w-full sm:max-w-3xl sm:max-h-[85vh]">
+              <DialogHeader>
+                <DialogTitle>จัดการข้อมูล Dropdown (Google Sheet)</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex justify-end">
+                  <Button variant="secondary" size="sm" className="sm:h-10" onClick={() => void loadDropdowns()} disabled={dropdownsLoading}>
+                    รีเฟรช
+                  </Button>
+                </div>
+                {dropdownsError && (
+                  <div className="text-sm text-destructive">
+                    {dropdownsError}
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="font-medium">ชนิดสินค้า</div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newProductTypeValue}
+                        onChange={(e) => setNewProductTypeValue(e.target.value)}
+                        placeholder="เพิ่มชนิดสินค้า..."
+                        className="h-9"
+                      />
+                      <Button size="sm" className="sm:h-10" onClick={() => void addProductType()} disabled={dropdownsLoading}>
+                        เพิ่ม
+                      </Button>
+                    </div>
+                    <div className="border rounded-md p-2 max-h-56 overflow-auto">
+                      {dropdownOptions.productTypeOptions.map((value) => (
+                        <div key={value} className="flex items-center justify-between gap-2 py-1">
+                          <div className="text-sm break-words">{value}</div>
+                          <Button variant="ghost" size="sm" className="h-9 sm:h-8" onClick={() => void deleteProductType(value)} disabled={dropdownsLoading}>
+                            ลบ
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="font-medium">ขนาด</div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newSizeValue}
+                        onChange={(e) => setNewSizeValue(e.target.value)}
+                        placeholder="เพิ่มขนาด..."
+                        className="h-9"
+                      />
+                      <Button size="sm" className="sm:h-10" onClick={() => void addSize()} disabled={dropdownsLoading}>
+                        เพิ่ม
+                      </Button>
+                    </div>
+                    <div className="border rounded-md p-2 max-h-56 overflow-auto">
+                      {dropdownOptions.sizeOptions.map((value) => (
+                        <div key={value} className="flex items-center justify-between gap-2 py-1">
+                          <div className="text-sm break-words">{value}</div>
+                          <Button variant="ghost" size="sm" className="h-9 sm:h-8" onClick={() => void deleteSize(value)} disabled={dropdownsLoading}>
+                            ลบ
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="font-medium">รายละเอียด (สินค้า)</div>
+                  <Input
+                    value={newProductValue}
+                    onChange={(e) => setNewProductValue(e.target.value)}
+                    placeholder='เช่น "แก้ว PET 7 ออนซ์ ปาก 78  // F1102070A018"'
+                    className="h-9"
+                  />
+                  <div className="flex justify-end">
+                    <Button size="sm" className="sm:h-10" onClick={() => void addProduct()} disabled={dropdownsLoading}>
+                      เพิ่มสินค้า
+                    </Button>
+                  </div>
+                  <div className="border rounded-md p-2 max-h-72 overflow-auto">
+                    {dropdownOptions.productOptions.map((value) => (
+                      <div key={value} className="flex items-start justify-between gap-2 py-2 border-b last:border-b-0">
+                        <div className="text-sm break-words min-w-0">{value}</div>
+                        <Button variant="ghost" size="sm" className="h-9 sm:h-8" onClick={() => void deleteProduct(value)} disabled={dropdownsLoading}>
+                          ลบ
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button onClick={handleDownloadPdf} className="gap-2 bg-primary hover:bg-primary/90" disabled={isDownloadingPdf} size="sm">
             <Download className="w-4 h-4" />
             ดาวน์โหลด PDF
           </Button>
         </div>
-
         <div 
-          ref={formRef} 
+          ref={formRef}
+          id="order-form-capture"
           className="bg-white p-6 shadow-lg mx-auto overflow-auto" 
           style={{ 
             ...fontSize11Style,
@@ -507,32 +887,28 @@ const OrderForm = () => {
               <span style={fontSize11Style}>บริษัทแวนด้าแพค จำกัด</span>
             </div>
             <div className="text-center flex-1">
-              <h1 className="font-bold text-black" style={{ fontSize: "18pt" }}>
+              <h1 className="font-bold text-black" style={{ fontSize: "20px" }}>
                 ใบบันทึกการรับการสั่งซื้อ (ผลิตภัณฑ์บรรจุภัณฑ์)
               </h1>
             </div>
             <div className="text-right" style={fontSize11Style}>
-              <div>FM-PPS-02 REV.03</div>
+              <div style={{ ...fontSize11Style, fontSize: "11px" }}>FM-PPS-02 REV.03</div>
               <div className="flex items-center gap-1 mt-1" style={fontSize11Style}>
                 <span style={fontSize11Style}>No.</span>
-                {isPdfMode ? (
-                <span className="border-b border-black min-w-32 h-[32px] inline-flex items-end pb-2 text-left" style={fontSize11Style}>{formData.orderNumber}</span>
-                ) : (
-                  <Input
-                    value={formData.orderNumber}
-                    onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
-                    className="w-32 h-[32px] text-left border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                    style={fontSize11Style}
-                  />
-                )}
+                <Input
+                  value={formData.orderNumber}
+                  onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
+                  className="w-32 h-[32px] text-left border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
+                  style={fontSize11Style}
+                />
               </div>
             </div>
           </div>
 
           {/* Order Type */}
           <div className="flex items-center gap-6 mb-3 flex-wrap" style={fontSize11Style}>
-            <div className="font-bold" style={fontSize11Style}>ประเภท</div>
-            <label className="flex items-baseline gap-2">
+            <div data-pdf-shift="order-type-phone" className="font-bold" style={fontSize11Style}>ประเภท</div>
+            <label data-pdf-shift="order-type-phone" className="flex items-baseline gap-2">
               <input
                 type="checkbox"
                 checked={formData.orderType.phone}
@@ -553,16 +929,12 @@ const OrderForm = () => {
                 className="w-4 h-4 border-2 border-black accent-black relative top-[2px]"
               />
               <span style={fontSize11Style}>ใบสั่งซื้อ PO. No.</span>
-              {isPdfMode ? (
-                <span className="border-b border-black min-w-32 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>{formData.poNumber}</span>
-              ) : (
-                <Input
-                  value={formData.poNumber}
-                  onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })}
-                  className="w-32 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                  style={fontSize11Style}
-                />
-              )}
+              <Input
+                value={formData.poNumber}
+                onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })}
+                className="w-32 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
+                style={fontSize11Style}
+              />
             </label>
             <label className="flex items-baseline gap-2">
               <input
@@ -574,16 +946,12 @@ const OrderForm = () => {
                 className="w-4 h-4 border-2 border-black accent-black relative top-[2px]"
               />
               <span style={fontSize11Style}>อื่นๆ</span>
-              {isPdfMode ? (
-                <span className="border-b border-black min-w-40 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>{formData.otherText}</span>
-              ) : (
-                <Input
-                  value={formData.otherText}
-                  onChange={(e) => setFormData({ ...formData, otherText: e.target.value })}
-                  className="w-40 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                  style={fontSize11Style}
-                />
-              )}
+              <Input
+                value={formData.otherText}
+                onChange={(e) => setFormData({ ...formData, otherText: e.target.value })}
+                className="w-40 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
+                style={fontSize11Style}
+              />
             </label>
           </div>
 
@@ -591,28 +959,20 @@ const OrderForm = () => {
           <div className="flex items-center gap-4 mb-3 flex-wrap" style={fontSize11Style}>
             <div className="flex items-center gap-2">
               <span style={fontSize11Style}>ชื่อลูกค้า</span>
-              {isPdfMode ? (
-                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>{formData.customerName}</span>
-              ) : (
-                <Input
-                  value={formData.customerName}
-                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                  style={fontSize11Style}
-                />
-              )}
+              <Input
+                value={formData.customerName}
+                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
+                style={fontSize11Style}
+              />
             </div>
             <div className="flex items-center gap-2">
               <span style={fontSize11Style}>วันที่</span>
-              {isPdfMode ? (
-                <span className="border-b border-black px-2 min-w-32 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>
-                  {formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : ''}
-                </span>
-              ) : (
               <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
+                    data-pdf-date-trigger="true"
                     className={cn(
                       "w-36 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent justify-start text-left font-normal px-0 hover:bg-transparent pb-2",
                       !formData.date && "text-muted-foreground"
@@ -623,7 +983,7 @@ const OrderForm = () => {
                       format(formData.date, "dd/MM/yyyy", { locale: th })
                     ) : (
                       <span className="flex items-center gap-1">
-                        <CalendarIcon className="h-3 w-3" />
+                        <CalendarIcon className="h-3 w-3 pdf-hide" />
                         เลือกวันที่
                       </span>
                     )}
@@ -642,20 +1002,15 @@ const OrderForm = () => {
                   />
                 </PopoverContent>
               </Popover>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <span style={fontSize11Style}>บุคคลที่ติดต่อ</span>
-              {isPdfMode ? (
-                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2" style={fontSize11Style}>{formData.contactPerson}</span>
-              ) : (
-                <Input
-                  value={formData.contactPerson}
-                  onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                  className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
-                  style={fontSize11Style}
-                />
-              )}
+              <Input
+                value={formData.contactPerson}
+                onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none bg-transparent pb-2"
+                style={fontSize11Style}
+              />
             </div>
           </div>
 
@@ -695,8 +1050,12 @@ const OrderForm = () => {
                     คุณลักษณะการใช้งาน
                   </th>
                   <th className="border border-black p-1 text-center align-middle font-normal w-[60px]" rowSpan={3} style={fontSize9Style}>ชนิดสินค้า</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-[60px]" rowSpan={3} style={fontSize9Style}>ขนาด</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-[192px]" rowSpan={3} style={fontSize9Style}>รายละเอียด</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[60px]" rowSpan={3} style={fontSize9Style}>
+                    <span className="relative -top-[1px]">ขนาด</span>
+                  </th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[192px]" rowSpan={3} style={fontSize9Style}>
+                    <span className="relative -top-[1px]">รายละเอียด</span>
+                  </th>
                   <th className="border border-black p-0 text-center align-middle font-normal w-[85px]" rowSpan={3} style={fontSize9Style}>
                     <div className="whitespace-nowrap">จำนวนการสั่งซื้อ</div>
                     <div>(ใบ/ชุด)</div>
@@ -735,33 +1094,33 @@ const OrderForm = () => {
                 </tr>
                 {/* Row 2: Material types and usage categories */}
                 <tr>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PS</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PP</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PET</th>
-                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}>PLA</th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}><span data-pdf-shift="material-header-text">PS</span></th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}><span data-pdf-shift="material-header-text">PP</span></th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}><span data-pdf-shift="material-header-text">PET</span></th>
+                  <th className="border border-black p-1 text-center align-middle font-normal w-[32px]" style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "10pt" }}><span data-pdf-shift="material-header-text">PLA</span></th>
                   <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ใส่ของร้อน", "(ที่อุณหภูมิ 45 - 70 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["ใส่ของร้อน", "(ที่อุณหภูมิ 45 - 70 C°)"]} height={112} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิปกติ", "(ที่อุณหภูมิ 25 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิปกติ", "(ที่อุณหภูมิ 25 C°)"]} height={96} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่เย็น", "(ที่อุณหภูมิ 0 -10 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่เย็น", "(ที่อุณหภูมิ 0 -10 C°)"]} height={96} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่แข็ง", "(ที่อุณหภูมิ -1 ถึง -80 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["ที่อุณหภูมิแช่แข็ง", "(ที่อุณหภูมิ -1 ถึง -80 C°)"]} height={112} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-[32px]" rowSpan={2}>
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["อื่นๆ"]} height={90} width={30} />
+                      <RotatedTextSVG lines={["อื่นๆ"]} height={96} width={30} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal w-[25px]" rowSpan={2}>
@@ -779,22 +1138,22 @@ const OrderForm = () => {
                 <tr>
                   <th className="border border-black p-1 text-center font-normal h-24 w-[32px]">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-20 C° ถึง 80 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-20 C° ถึง 80 C°)"]} height={96} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24 w-[32px]">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 100 C°/120 C°(M))"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 100 C°/120 C°(M))"]} height={96} width={32} fontSize={8} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24 w-[32px]">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 70 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "-10 C° ถึง 70 C°)"]} height={96} width={32} />
                     </div>
                   </th>
                   <th className="border border-black p-1 text-center font-normal h-24 w-[32px]">
                     <div className="h-24 flex items-center justify-center">
-                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "0 C° ถึง 50 C°)"]} height={90} width={32} />
+                      <RotatedTextSVG lines={["(อุณหภูมิสูงสุดที่", "0 C° ถึง 50 C°)"]} height={96} width={32} />
                     </div>
                   </th>
                 </tr>
@@ -810,122 +1169,84 @@ const OrderForm = () => {
 
                   return (
                   <tr key={index} className={isBottomRow ? "h-[80px]" : "h-10"} style={rowHeightStyle}>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.ps ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.ps}
-                          onChange={(e) => updateOrderItem(index, "ps", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.ps}
+                        onChange={(e) => updateOrderItem(index, "ps", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.pp ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.pp}
-                          onChange={(e) => updateOrderItem(index, "pp", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.pp}
+                        onChange={(e) => updateOrderItem(index, "pp", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.pet ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.pet}
-                          onChange={(e) => updateOrderItem(index, "pet", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.pet}
+                        onChange={(e) => updateOrderItem(index, "pet", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.pla ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.pla}
-                          onChange={(e) => updateOrderItem(index, "pla", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.pla}
+                        onChange={(e) => updateOrderItem(index, "pla", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.hotFood ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.hotFood}
-                          onChange={(e) => updateOrderItem(index, "hotFood", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.hotFood}
+                        onChange={(e) => updateOrderItem(index, "hotFood", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.normalTemp ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.normalTemp}
-                          onChange={(e) => updateOrderItem(index, "normalTemp", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.normalTemp}
+                        onChange={(e) => updateOrderItem(index, "normalTemp", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.coldTemp ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.coldTemp}
-                          onChange={(e) => updateOrderItem(index, "coldTemp", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.coldTemp}
+                        onChange={(e) => updateOrderItem(index, "coldTemp", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.freezeTemp ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.freezeTemp}
-                          onChange={(e) => updateOrderItem(index, "freezeTemp", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.freezeTemp}
+                        onChange={(e) => updateOrderItem(index, "freezeTemp", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        item.otherUsage ? <span className="text-xs">✓</span> : null
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={item.otherUsage}
-                          onChange={(e) => updateOrderItem(index, "otherUsage", e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 w-[32px] text-center align-middle" style={cellHeightStyle}>
+                      <input
+                        type="checkbox"
+                        checked={item.otherUsage}
+                        onChange={(e) => updateOrderItem(index, "otherUsage", e.target.checked)}
+                        className="w-3 h-3"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 w-[60px] relative group align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-[2px] h-10 w-[60px] relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openProductTypeDropdownIndex === index} onOpenChange={(open) => setOpenProductTypeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
-                            <span className="flex-1">{item.productType || ''}</span>
-                            {!isPdfMode && (
-                              <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
-                            )}
+                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center justify-center relative pr-4 pdf-no-pad-right text-center">
+                            <span className="w-full">{item.productType || ''}</span>
+                            <ChevronDown className="h-3 w-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none pdf-hide" />
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-[120px] p-0 bg-white z-50" align="start">
@@ -934,7 +1255,7 @@ const OrderForm = () => {
                             <CommandList>
                               <CommandEmpty>ไม่พบรายการ</CommandEmpty>
                               <CommandGroup className="max-h-[200px] overflow-auto">
-                                {productTypeOptions.map((type) => (
+                                {dropdownOptions.productTypeOptions.map((type) => (
                                   <CommandItem
                                     key={type}
                                     value={type}
@@ -958,7 +1279,7 @@ const OrderForm = () => {
                           </Command>
                         </PopoverContent>
                       </Popover>
-                      {item.productType && !isPdfMode && (
+                      {item.productType && (
                         <button
                           onClick={() => updateOrderItem(index, "productType", "")}
                           className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity"
@@ -967,14 +1288,12 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-0 h-10 w-[60px] relative group align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-[2px] h-10 w-[60px] relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openSizeDropdownIndex === index} onOpenChange={(open) => setOpenSizeDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
-                            <span className="flex-1">{item.size || ''}</span>
-                            {!isPdfMode && (
-                              <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
-                            )}
+                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center relative pr-4 pdf-no-pad-right">
+                            <span className="flex-1 min-w-0">{item.size || ''}</span>
+                            <ChevronDown className="h-3 w-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none pdf-hide" />
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-[200px] p-0 bg-white z-50" align="start">
@@ -983,7 +1302,7 @@ const OrderForm = () => {
                             <CommandList>
                               <CommandEmpty>ไม่พบรายการ</CommandEmpty>
                               <CommandGroup className="max-h-[300px] overflow-auto">
-                                {sizeOptions.map((size) => (
+                                {dropdownOptions.sizeOptions.map((size) => (
                                   <CommandItem
                                     key={size}
                                     value={size}
@@ -1007,7 +1326,7 @@ const OrderForm = () => {
                           </Command>
                         </PopoverContent>
                       </Popover>
-                      {item.size && !isPdfMode && (
+                      {item.size && (
                         <button
                           onClick={() => updateOrderItem(index, "size", "")}
                           className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1016,14 +1335,12 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-0 h-10 w-[192px] relative group align-middle" style={cellHeightStyle}>
+                    <td className="border border-black p-[2px] h-10 w-[192px] relative group align-middle" style={cellHeightStyle}>
                       <Popover open={openDropdownIndex === index} onOpenChange={(open) => setOpenDropdownIndex(open ? index : null)}>
                         <PopoverTrigger asChild>
-                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center justify-between">
-                            <span className="flex-1">{item.details || ''}</span>
-                            {!isPdfMode && (
-                              <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
-                            )}
+                          <div className="h-full w-full cursor-pointer text-xs break-words whitespace-normal flex items-center relative pr-4 pdf-no-pad-right">
+                            <span className="flex-1 min-w-0">{item.details || ''}</span>
+                            <ChevronDown className="h-3 w-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none pdf-hide" />
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-[400px] p-0 bg-white z-50" align="start">
@@ -1032,12 +1349,12 @@ const OrderForm = () => {
                             <CommandList>
                               <CommandEmpty>ไม่พบรายการ</CommandEmpty>
                               <CommandGroup className="max-h-[300px] overflow-auto">
-                                {productOptions.map((product) => (
+                                {dropdownOptions.productOptions.map((product) => (
                                   <CommandItem
-                                    key={product.code}
-                                    value={`${product.name} ${product.code}`}
+                                    key={product}
+                                    value={product}
                                     onSelect={() => {
-                                      updateOrderItem(index, "details", `${product.name} // ${product.code}`);
+                                      updateOrderItem(index, "details", product);
                                       setOpenDropdownIndex(null);
                                     }}
                                     className="text-xs"
@@ -1045,13 +1362,10 @@ const OrderForm = () => {
                                     <Check
                                       className={cn(
                                         "mr-2 h-3 w-3",
-                                        item.details === `${product.name} // ${product.code}` ? "opacity-100" : "opacity-0"
+                                        item.details === product ? "opacity-100" : "opacity-0"
                                       )}
                                     />
-                                    <div className="flex flex-col">
-                                      <span className="break-words">{product.name}</span>
-                                      <span className="text-muted-foreground text-[10px]">{product.code}</span>
-                                    </div>
+                                    <span className="break-words">{product}</span>
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
@@ -1059,7 +1373,7 @@ const OrderForm = () => {
                           </Command>
                         </PopoverContent>
                       </Popover>
-                      {item.details && !isPdfMode && (
+                      {item.details && (
                         <button
                           onClick={() => updateOrderItem(index, "details", "")}
                           className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs leading-none opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1068,114 +1382,78 @@ const OrderForm = () => {
                         </button>
                       )}
                     </td>
-                    <td className="border border-black p-0 h-10 align-middle w-[85px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs text-center block w-full">{getQuantityForPdf(item.quantity)}</span>
-                      ) : (
-                        <Input
-                          value={item.quantity}
-                          onChange={(e) => {
-                            const formatted = formatQuantityDisplay(e.target.value);
-                            updateOrderItem(index, "quantity", formatted);
-                          }}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 align-middle w-[85px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const formatted = formatQuantityDisplay(e.target.value);
+                          updateOrderItem(index, "quantity", formatted);
+                        }}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 align-middle w-[60px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs text-center block w-full">{item.price}</span>
-                      ) : (
-                        <Input
-                          value={item.price}
-                          onChange={(e) => {
-                            const rawValue = e.target.value.replace(/[^0-9.]/g, '');
-                            updateOrderItem(index, "price", rawValue);
-                          }}
-                          onBlur={(e) => {
-                            const formatted = formatPrice(item.price);
-                            updateOrderItem(index, "price", formatted);
-                          }}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 align-middle w-[60px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.price}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(/[^0-9.]/g, "");
+                          updateOrderItem(index, "price", rawValue);
+                        }}
+                        onBlur={() => {
+                          const formatted = formatPrice(item.price);
+                          updateOrderItem(index, "price", formatted);
+                        }}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 align-middle w-[40px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs text-center block w-full">{item.deliveryDate}</span>
-                      ) : (
-                        <Input
-                          value={item.deliveryDate}
-                          onChange={(e) => updateOrderItem(index, "deliveryDate", e.target.value)}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 align-middle w-[40px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.deliveryDate}
+                        onChange={(e) => updateOrderItem(index, "deliveryDate", e.target.value)}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 align-middle w-[40px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs text-left block w-full">{item.deliverableNote}</span>
-                      ) : (
-                        <Input
-                          value={item.deliverableNote}
-                          onChange={(e) => updateOrderItem(index, "deliverableNote", e.target.value)}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 align-middle w-[40px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.deliverableNote}
+                        onChange={(e) => updateOrderItem(index, "deliverableNote", e.target.value)}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 align-middle w-[65px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs text-left block w-full">{item.notDeliverableNote}</span>
-                      ) : (
-                        <Input
-                          value={item.notDeliverableNote}
-                          onChange={(e) => updateOrderItem(index, "notDeliverableNote", e.target.value)}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 align-middle w-[65px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.notDeliverableNote}
+                        onChange={(e) => updateOrderItem(index, "notDeliverableNote", e.target.value)}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 align-middle w-[35px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs text-left block w-full">{item.exportType}</span>
-                      ) : (
-                        <Input
-                          value={item.exportType}
-                          onChange={(e) => updateOrderItem(index, "exportType", e.target.value)}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 align-middle w-[35px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.exportType}
+                        onChange={(e) => updateOrderItem(index, "exportType", e.target.value)}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent text-left rounded-none"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 text-center align-middle w-[25px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs block w-full">{item.thai}</span>
-                      ) : (
-                        <Input
-                          value={item.thai}
-                          onChange={(e) => updateOrderItem(index, "thai", e.target.value)}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 text-center align-middle w-[25px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.thai}
+                        onChange={(e) => updateOrderItem(index, "thai", e.target.value)}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 text-center bg-transparent rounded-none"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 align-middle w-[25px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs block w-full">{item.lawRef}</span>
-                      ) : (
-                        <Input
-                          value={item.lawRef}
-                          onChange={(e) => updateOrderItem(index, "lawRef", e.target.value)}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 align-middle w-[25px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.lawRef}
+                        onChange={(e) => updateOrderItem(index, "lawRef", e.target.value)}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent rounded-none"
+                      />
                     </td>
-                    <td className="border border-black p-0 h-10 align-middle w-[60px]" style={cellHeightStyle}>
-                      {isPdfMode ? (
-                        <span className="text-xs block w-full">{item.notes}</span>
-                      ) : (
-                        <Input
-                          value={item.notes}
-                          onChange={(e) => updateOrderItem(index, "notes", e.target.value)}
-                          className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent rounded-none"
-                        />
-                      )}
+                    <td className="border border-black p-[2px] h-10 align-middle w-[60px]" style={cellHeightStyle}>
+                      <Input
+                        value={item.notes}
+                        onChange={(e) => updateOrderItem(index, "notes", e.target.value)}
+                        className="h-full w-full text-xs border-0 p-0 focus-visible:ring-0 bg-transparent rounded-none"
+                      />
                     </td>
                   </tr>
                   );
@@ -1188,23 +1466,20 @@ const OrderForm = () => {
           <div className="flex justify-end mt-4">
             <div className="text-center" style={fontSize11Style}>
               <span style={fontSize11Style}>ลงชื่อ ผู้รับใบสั่งซื้อ</span>
-              {isPdfMode ? (
-                <span className="border-b border-black min-w-48 h-[32px] inline-flex items-end pb-2 mx-2" style={fontSize11Style}>{signature}</span>
-              ) : (
-                <Input
-                  value={signature}
-                  onChange={(e) => setSignature(e.target.value)}
-                  className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none mx-2 inline-block bg-transparent pb-2"
-                  style={fontSize11Style}
-                />
-              )}
+              <Input
+                value={signature}
+                onChange={(e) => setSignature(e.target.value)}
+                data-pdf-skip-shift="true"
+                className="w-48 h-[32px] border-b border-black border-t-0 border-l-0 border-r-0 rounded-none mx-2 inline-block bg-transparent pb-2"
+                style={fontSize11Style}
+              />
             </div>
           </div>
 
           {/* Footer */}
           <div className="flex justify-between mt-3 text-gray-600" style={fontSize11Style}>
-            <div>&quot;Electronic Document Control But UnControlled When Printed Out เอกสารจะไม่ควบคุม เมื่อพิมพ์ออกมาแล้ว&quot;</div>
-            <div>ED : 24/4/2024</div>
+            <div style={{ ...fontSize11Style, fontSize: "9px" }}>&quot;Electronic Document Control But UnControlled When Printed Out เอกสารจะไม่ควบคุม เมื่อพิมพ์ออกมาแล้ว&quot;</div>
+            <div style={{ ...fontSize11Style, fontSize: "9px" }}>ED : 24/4/2024</div>
           </div>
         </div>
 
