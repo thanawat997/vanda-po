@@ -124,8 +124,9 @@ const handleDropdownDelete = async (sheetName, req, res) => {
 
 export default async function handler(req, res) {
   try {
-    const pathParam = req.query?.path;
-    const parts = Array.isArray(pathParam) ? pathParam : typeof pathParam === "string" ? [pathParam] : [];
+    const pathname = new URL(req.url ?? "", "http://localhost").pathname;
+    const afterApi = pathname.replace(/^\/api\/?/, "");
+    const parts = afterApi ? afterApi.split("/").filter(Boolean) : [];
 
     if (parts.length === 0) return json(res, 404, { error: "Not found" });
 
