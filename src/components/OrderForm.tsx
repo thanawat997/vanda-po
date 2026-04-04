@@ -497,10 +497,7 @@ const OrderForm = () => {
 
   useEffect(() => {
     if (!isDropdownManagerOpen) return;
-    const intervalId = window.setInterval(() => {
-      void loadDropdowns();
-    }, 5000);
-    return () => window.clearInterval(intervalId);
+    void loadDropdowns();
   }, [isDropdownManagerOpen, loadDropdowns]);
 
   const addProductType = async () => {
