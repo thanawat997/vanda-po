@@ -806,6 +806,44 @@ const OrderForm = () => {
             replaceWithUnderlinedText(el, el.value || "", shiftUpPx);
           });
 
+          const shiftTableValueInputDown = (input: HTMLInputElement, shiftDownPx: number) => {
+            const win = clonedDoc.defaultView;
+            if (!win) return;
+            const cs = win.getComputedStyle(input);
+
+            const wrapper = clonedDoc.createElement("div");
+            wrapper.style.display = "block";
+            wrapper.style.width = cs.width;
+            wrapper.style.height = cs.height;
+            wrapper.style.boxSizing = "border-box";
+            wrapper.style.fontFamily = cs.fontFamily;
+            wrapper.style.fontSize = cs.fontSize;
+            wrapper.style.fontWeight = cs.fontWeight;
+            wrapper.style.color = cs.color;
+            wrapper.style.textAlign = cs.textAlign;
+            wrapper.style.background = "transparent";
+            wrapper.style.border = "0";
+            wrapper.style.padding = cs.padding;
+            wrapper.style.overflow = "visible";
+
+            const inner = clonedDoc.createElement("div");
+            inner.textContent = input.value || "";
+            inner.style.width = "100%";
+            inner.style.whiteSpace = "pre";
+            inner.style.transform = `translateY(${shiftDownPx}px)`;
+            inner.style.textAlign = cs.textAlign;
+            wrapper.appendChild(inner);
+
+            input.replaceWith(wrapper);
+          };
+
+          const tableQtyPriceInputs = clonedNode.querySelectorAll<HTMLInputElement>(
+            'table input[data-pdf-shift="table-qty"], table input[data-pdf-shift="table-price"]'
+          );
+          tableQtyPriceInputs.forEach((input) => {
+            shiftTableValueInputDown(input, 15);
+          });
+
           const freeNoteContainers = clonedNode.querySelectorAll<HTMLElement>('[data-free-note-container="true"]');
           freeNoteContainers.forEach((container) => {
             const win = clonedDoc.defaultView;
@@ -1613,6 +1651,7 @@ const OrderForm = () => {
                     </td>
                     <td className="border border-black p-[2px] h-10 align-middle w-[85px]" style={cellHeightStyle}>
                       <Input
+                        data-pdf-shift="table-qty"
                         value={item.quantity}
                         onChange={(e) => {
                           const formatted = formatQuantityDisplay(e.target.value);
@@ -1623,6 +1662,7 @@ const OrderForm = () => {
                     </td>
                     <td className="border border-black p-[2px] h-10 align-middle w-[60px]" style={cellHeightStyle}>
                       <Input
+                        data-pdf-shift="table-price"
                         value={item.price}
                         onChange={(e) => {
                           const rawValue = e.target.value.replace(/[^0-9.]/g, "");
