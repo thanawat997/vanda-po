@@ -1354,8 +1354,10 @@ const OrderForm = () => {
                     <div>อก</div>
                   </th>
                   <th className="border border-black p-1 text-center align-top font-normal" colSpan={2} style={fontSize8Style}>
-                    <div>กฎหมาย</div>
-                    <div>อ้างอิง</div>
+                    <div className="relative -top-[3px]">
+                      <div>กฎหมาย</div>
+                      <div>อ้างอิง</div>
+                    </div>
                   </th>
                   <th className="border border-black p-1 text-center align-middle font-normal w-[60px]" rowSpan={3} style={fontSize9Style}>หมายเหตุ</th>
                 </tr>
