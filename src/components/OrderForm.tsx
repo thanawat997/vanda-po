@@ -445,7 +445,7 @@ const OrderForm = () => {
   const noteDragRef = useRef<{ id: string; startX: number; startY: number; originX: number; originY: number } | null>(null);
   const noteResizeRef = useRef<{
     id: string;
-    handle: "nw" | "ne" | "sw" | "se";
+    handle: "nw" | "ne" | "sw" | "se" | "e" | "s";
     startX: number;
     startY: number;
     originX: number;
@@ -607,7 +607,7 @@ const OrderForm = () => {
     noteDragRef.current = null;
   };
 
-  const startResizeFreeNote = (id: string, handle: "nw" | "ne" | "sw" | "se", e: React.PointerEvent) => {
+  const startResizeFreeNote = (id: string, handle: "nw" | "ne" | "sw" | "se" | "e" | "s", e: React.PointerEvent) => {
     const note = freeNotes.find((n) => n.id === id);
     if (!note) return;
     noteResizeRef.current = {
@@ -649,6 +649,11 @@ const OrderForm = () => {
 
     const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
+    if (resize.handle === "e") {
+      nextW = clamp(resize.originW + dx, minW, Math.max(minW, containerW - resize.originX));
+    } else if (resize.handle === "s") {
+      nextH = clamp(resize.originH + dy, minH, Math.max(minH, containerH - resize.originY));
+    } else
     if (resize.handle === "se") {
       nextW = clamp(resize.originW + dx, minW, Math.max(minW, containerW - resize.originX));
       nextH = clamp(resize.originH + dy, minH, Math.max(minH, containerH - resize.originY));
@@ -1099,14 +1104,14 @@ const OrderForm = () => {
               className="bg-transparent border border-dashed border-black/30"
             >
               <div
-                className="pdf-hide flex items-center justify-between px-2 h-7 border-b border-black cursor-move select-none"
+                className="pdf-hide flex items-center justify-between px-3 sm:px-2 h-10 sm:h-7 border-b border-black/70 cursor-move select-none touch-none"
                 onPointerDown={(e) => startDragFreeNote(note.id, e)}
                 onPointerMove={moveDragFreeNote}
                 onPointerUp={endDragFreeNote}
                 onPointerCancel={endDragFreeNote}
               >
                 <div className="text-[11px] leading-none">โน้ต</div>
-                <button type="button" className="text-[12px] leading-none px-1" onClick={() => deleteFreeNote(note.id)}>
+                <button type="button" className="text-[16px] leading-none w-8 h-8 sm:w-auto sm:h-auto sm:px-1" onClick={() => deleteFreeNote(note.id)}>
                   ×
                 </button>
               </div>
@@ -1118,29 +1123,43 @@ const OrderForm = () => {
                 style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif" }}
               />
               <div
-                className="pdf-hide absolute left-0 top-0 w-4 h-4 cursor-nwse-resize border-l-2 border-t-2 border-black/40"
+                className="pdf-hide absolute left-0 top-0 w-7 h-7 sm:w-4 sm:h-4 cursor-nwse-resize border-l-2 border-t-2 border-black/40 bg-black/5 touch-none"
                 onPointerDown={(e) => startResizeFreeNote(note.id, "nw", e)}
                 onPointerMove={moveResizeFreeNote}
                 onPointerUp={endResizeFreeNote}
                 onPointerCancel={endResizeFreeNote}
               />
               <div
-                className="pdf-hide absolute right-0 top-0 w-4 h-4 cursor-nesw-resize border-r-2 border-t-2 border-black/40"
+                className="pdf-hide absolute right-0 top-0 w-7 h-7 sm:w-4 sm:h-4 cursor-nesw-resize border-r-2 border-t-2 border-black/40 bg-black/5 touch-none"
                 onPointerDown={(e) => startResizeFreeNote(note.id, "ne", e)}
                 onPointerMove={moveResizeFreeNote}
                 onPointerUp={endResizeFreeNote}
                 onPointerCancel={endResizeFreeNote}
               />
               <div
-                className="pdf-hide absolute left-0 bottom-0 w-4 h-4 cursor-nesw-resize border-l-2 border-b-2 border-black/40"
+                className="pdf-hide absolute left-0 bottom-0 w-7 h-7 sm:w-4 sm:h-4 cursor-nesw-resize border-l-2 border-b-2 border-black/40 bg-black/5 touch-none"
                 onPointerDown={(e) => startResizeFreeNote(note.id, "sw", e)}
                 onPointerMove={moveResizeFreeNote}
                 onPointerUp={endResizeFreeNote}
                 onPointerCancel={endResizeFreeNote}
               />
               <div
-                className="pdf-hide absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize border-r-2 border-b-2 border-black/40"
+                className="pdf-hide absolute right-0 bottom-0 w-7 h-7 sm:w-4 sm:h-4 cursor-nwse-resize border-r-2 border-b-2 border-black/40 bg-black/5 touch-none"
                 onPointerDown={(e) => startResizeFreeNote(note.id, "se", e)}
+                onPointerMove={moveResizeFreeNote}
+                onPointerUp={endResizeFreeNote}
+                onPointerCancel={endResizeFreeNote}
+              />
+              <div
+                className="pdf-hide absolute right-0 top-7 sm:top-4 bottom-7 sm:bottom-4 w-5 sm:w-2 cursor-ew-resize bg-black/0 touch-none"
+                onPointerDown={(e) => startResizeFreeNote(note.id, "e", e)}
+                onPointerMove={moveResizeFreeNote}
+                onPointerUp={endResizeFreeNote}
+                onPointerCancel={endResizeFreeNote}
+              />
+              <div
+                className="pdf-hide absolute left-7 sm:left-4 right-7 sm:right-4 bottom-0 h-5 sm:h-2 cursor-ns-resize bg-black/0 touch-none"
+                onPointerDown={(e) => startResizeFreeNote(note.id, "s", e)}
                 onPointerMove={moveResizeFreeNote}
                 onPointerUp={endResizeFreeNote}
                 onPointerCancel={endResizeFreeNote}
