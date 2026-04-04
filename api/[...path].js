@@ -5,24 +5,40 @@ const SHEET_PRODUCT_TYPES = process.env.GOOGLE_SHEETS_SHEET_PRODUCT_TYPES ?? "pr
 const SHEET_SIZES = process.env.GOOGLE_SHEETS_SHEET_SIZES ?? "sizes";
 const SHEET_PRODUCTS = process.env.GOOGLE_SHEETS_SHEET_PRODUCTS ?? "products";
 
-const readServiceAccountCredentials = () => {
-  const jsonBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64;
-  if (jsonBase64) {
-    const decoded = Buffer.from(jsonBase64, "base64").toString("utf8");
-    const parsed = JSON.parse(decoded);
+const parseServiceAccountJson = (raw, sourceLabel) => {
+  const trimmed = String(raw ?? "").trim();
+  if (!trimmed) throw new Error(`Empty ${sourceLabel}`);
+
+  try {
+    const parsed = JSON.parse(trimmed);
     if (parsed?.private_key && typeof parsed.private_key === "string") {
       parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
     }
     return parsed;
+  } catch (_err) {
+    throw new Error(`Invalid ${sourceLabel}: not valid JSON`);
+  }
+};
+
+const readServiceAccountCredentials = () => {
+  const jsonBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64;
+  if (jsonBase64) {
+    const raw = String(jsonBase64 ?? "").trim();
+    if (raw.startsWith("{")) {
+      return parseServiceAccountJson(raw, "GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 (looks like JSON, expected base64)");
+    }
+
+    const normalized = raw.replace(/^["']|["']$/g, "").replace(/\s+/g, "");
+    const decoded = Buffer.from(normalized, "base64").toString("utf8").trim();
+    if (!decoded.startsWith("{")) {
+      throw new Error("Invalid GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: decoded value is not JSON");
+    }
+    return parseServiceAccountJson(decoded, "GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 (decoded)");
   }
 
   const jsonFromEnv = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
   if (jsonFromEnv) {
-    const parsed = JSON.parse(jsonFromEnv);
-    if (parsed?.private_key && typeof parsed.private_key === "string") {
-      parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
-    }
-    return parsed;
+    return parseServiceAccountJson(jsonFromEnv, "GOOGLE_SERVICE_ACCOUNT_JSON");
   }
 
   throw new Error("Missing GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_SERVICE_ACCOUNT_JSON_BASE64");
@@ -76,6 +92,23 @@ const writeStringList = async (sheetName, values) => {
   });
 };
 
+const getSheetNameByListKey = (key) => {
+  switch (key) {
+    case "productTypes":
+    case "productType":
+    case "product-types":
+      return SHEET_PRODUCT_TYPES;
+    case "sizes":
+    case "size":
+      return SHEET_SIZES;
+    case "products":
+    case "product":
+      return SHEET_PRODUCTS;
+    default:
+      return null;
+  }
+};
+
 const readJsonBody = async (req) => {
   if (typeof req.body === "object" && req.body !== null) return req.body;
   if (typeof req.body === "string" && req.body.trim()) return JSON.parse(req.body);
@@ -122,6 +155,19 @@ const handleDropdownDelete = async (sheetName, req, res) => {
   return json(res, 200, { ok: true });
 };
 
+const handleDropdownMutation = async (req, res) => {
+  const body = await readJsonBody(req);
+  const listKey = normalizeString(body?.list);
+  const action = normalizeString(body?.action);
+  const sheetName = getSheetNameByListKey(listKey);
+
+  if (!sheetName) return json(res, 400, { error: "Invalid list" });
+  if (action !== "add" && action !== "delete") return json(res, 400, { error: "Invalid action" });
+
+  if (action === "add") return await handleDropdownAdd(sheetName, req, res);
+  return await handleDropdownDelete(sheetName, req, res);
+};
+
 export default async function handler(req, res) {
   try {
     const pathname = new URL(req.url ?? "", "http://localhost").pathname;
@@ -146,27 +192,12 @@ export default async function handler(req, res) {
       return json(res, 200, { productTypes, sizes, products });
     }
 
-    if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
-
-    if (parts[1] === "product-types" && parts.length === 2) {
-      return await handleDropdownAdd(SHEET_PRODUCT_TYPES, req, res);
-    }
-    if (parts[1] === "product-types" && parts[2] === "delete") {
-      return await handleDropdownDelete(SHEET_PRODUCT_TYPES, req, res);
+    if (parts.length === 1 && req.method === "POST") {
+      return await handleDropdownMutation(req, res);
     }
 
-    if (parts[1] === "sizes" && parts.length === 2) {
-      return await handleDropdownAdd(SHEET_SIZES, req, res);
-    }
-    if (parts[1] === "sizes" && parts[2] === "delete") {
-      return await handleDropdownDelete(SHEET_SIZES, req, res);
-    }
-
-    if (parts[1] === "products" && parts.length === 2) {
-      return await handleDropdownAdd(SHEET_PRODUCTS, req, res);
-    }
-    if (parts[1] === "products" && parts[2] === "delete") {
-      return await handleDropdownDelete(SHEET_PRODUCTS, req, res);
+    if (req.method !== "GET" && req.method !== "POST") {
+      return json(res, 405, { error: "Method not allowed" });
     }
 
     return json(res, 404, { error: "Not found" });

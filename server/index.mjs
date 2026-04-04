@@ -116,6 +116,62 @@ app.get("/api/dropdowns", async (_req, res) => {
   }
 });
 
+const getSheetNameByListKey = (key) => {
+  switch (String(key ?? "").trim()) {
+    case "productTypes":
+    case "productType":
+    case "product-types":
+      return SHEET_PRODUCT_TYPES;
+    case "sizes":
+    case "size":
+      return SHEET_SIZES;
+    case "products":
+    case "product":
+      return SHEET_PRODUCTS;
+    default:
+      return null;
+  }
+};
+
+app.post("/api/dropdowns", async (req, res) => {
+  try {
+    if (!SPREADSHEET_ID) {
+      res.status(500).json({ error: "Missing GOOGLE_SHEETS_SPREADSHEET_ID" });
+      return;
+    }
+
+    const list = String(req.body?.list ?? "").trim();
+    const action = String(req.body?.action ?? "").trim();
+    const sheetName = getSheetNameByListKey(list);
+    const value = normalizeString(req.body?.value);
+
+    if (!sheetName) {
+      res.status(400).json({ error: "Invalid list" });
+      return;
+    }
+    if (action !== "add" && action !== "delete") {
+      res.status(400).json({ error: "Invalid action" });
+      return;
+    }
+    if (!value) {
+      res.status(400).json({ error: "Missing value" });
+      return;
+    }
+
+    const current = await readStringList(sheetName);
+    const next =
+      action === "add"
+        ? sortCaseInsensitive(Array.from(new Set([...current, value])))
+        : current.filter((v) => v !== value);
+
+    await writeStringList(sheetName, next);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("dropdowns mutation error:", err);
+    res.status(500).json({ error: err instanceof Error ? err.message : "Failed to update dropdowns" });
+  }
+});
+
 app.post("/api/dropdowns/product-types", async (req, res) => {
   try {
     const value = normalizeString(req.body?.value);

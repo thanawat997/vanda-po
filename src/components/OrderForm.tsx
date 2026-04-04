@@ -506,39 +506,39 @@ const OrderForm = () => {
   const addProductType = async () => {
     const value = newProductTypeValue.trim();
     if (!value) return;
-    await apiJson("/api/dropdowns/product-types", { method: "POST", body: JSON.stringify({ value }) });
+    await apiJson("/api/dropdowns", { method: "POST", body: JSON.stringify({ list: "productTypes", action: "add", value }) });
     setNewProductTypeValue("");
     await loadDropdowns();
   };
 
   const deleteProductType = async (value: string) => {
-    await apiJson("/api/dropdowns/product-types/delete", { method: "POST", body: JSON.stringify({ value }) });
+    await apiJson("/api/dropdowns", { method: "POST", body: JSON.stringify({ list: "productTypes", action: "delete", value }) });
     await loadDropdowns();
   };
 
   const addSize = async () => {
     const value = newSizeValue.trim();
     if (!value) return;
-    await apiJson("/api/dropdowns/sizes", { method: "POST", body: JSON.stringify({ value }) });
+    await apiJson("/api/dropdowns", { method: "POST", body: JSON.stringify({ list: "sizes", action: "add", value }) });
     setNewSizeValue("");
     await loadDropdowns();
   };
 
   const deleteSize = async (value: string) => {
-    await apiJson("/api/dropdowns/sizes/delete", { method: "POST", body: JSON.stringify({ value }) });
+    await apiJson("/api/dropdowns", { method: "POST", body: JSON.stringify({ list: "sizes", action: "delete", value }) });
     await loadDropdowns();
   };
 
   const addProduct = async () => {
     const value = newProductValue.trim();
     if (!value) return;
-    await apiJson("/api/dropdowns/products", { method: "POST", body: JSON.stringify({ value }) });
+    await apiJson("/api/dropdowns", { method: "POST", body: JSON.stringify({ list: "products", action: "add", value }) });
     setNewProductValue("");
     await loadDropdowns();
   };
 
   const deleteProduct = async (value: string) => {
-    await apiJson("/api/dropdowns/products/delete", { method: "POST", body: JSON.stringify({ value }) });
+    await apiJson("/api/dropdowns", { method: "POST", body: JSON.stringify({ list: "products", action: "delete", value }) });
     await loadDropdowns();
   };
 
