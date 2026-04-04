@@ -380,7 +380,7 @@ interface OrderItem {
 
 const OrderForm = () => {
   const formRef = useRef<HTMLDivElement>(null);
-  const [formData, setFormData] = useState({
+  const getInitialFormData = () => ({
     orderType: { phone: false, po: false, other: false },
     poNumber: "",
     otherText: "",
@@ -389,6 +389,7 @@ const OrderForm = () => {
     date: undefined as Date | undefined,
     contactPerson: "",
   });
+  const [formData, setFormData] = useState(getInitialFormData);
 
   const createEmptyOrderItem = (): OrderItem => ({
     ps: false,
@@ -440,6 +441,8 @@ const OrderForm = () => {
   const [newProductTypeValue, setNewProductTypeValue] = useState("");
   const [newSizeValue, setNewSizeValue] = useState("");
   const [newProductValue, setNewProductValue] = useState("");
+  const [freeNotes, setFreeNotes] = useState<Array<{ id: string; x: number; y: number; w: number; h: number; text: string }>>([]);
+  const noteDragRef = useRef<{ id: string; startX: number; startY: number; originX: number; originY: number } | null>(null);
 
   const apiJson = useCallback(async <T,>(url: string, init: RequestInit = {}): Promise<T> => {
     const apiBaseRaw = (import.meta.env as { VITE_API_BASE?: string }).VITE_API_BASE ?? "";
@@ -537,6 +540,61 @@ const OrderForm = () => {
   const deleteProduct = async (value: string) => {
     await apiJson("/api/dropdowns", { method: "POST", body: JSON.stringify({ list: "products", action: "delete", value }) });
     await loadDropdowns();
+  };
+
+  const clearAll = () => {
+    setFormData(getInitialFormData());
+    setOrderItems(Array.from({ length: 4 }, () => createEmptyOrderItem()));
+    setSignature("");
+    setFreeNotes([]);
+    setOpenDropdownIndex(null);
+    setOpenSizeDropdownIndex(null);
+    setOpenProductTypeDropdownIndex(null);
+    setIsDatePickerOpen(false);
+    setIsDropdownManagerOpen(false);
+  };
+
+  const addFreeNote = () => {
+    const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+    const offset = freeNotes.length * 16;
+    setFreeNotes((prev) => [...prev, { id, x: 24 + offset, y: 24 + offset, w: 260, h: 110, text: "" }]);
+  };
+
+  const deleteFreeNote = (id: string) => {
+    setFreeNotes((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const updateFreeNoteText = (id: string, text: string) => {
+    setFreeNotes((prev) => prev.map((n) => (n.id === id ? { ...n, text } : n)));
+  };
+
+  const startDragFreeNote = (id: string, e: React.PointerEvent) => {
+    const note = freeNotes.find((n) => n.id === id);
+    if (!note) return;
+    noteDragRef.current = { id, startX: e.clientX, startY: e.clientY, originX: note.x, originY: note.y };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+  };
+
+  const moveDragFreeNote = (e: React.PointerEvent) => {
+    const drag = noteDragRef.current;
+    if (!drag) return;
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+
+    const container = formRef.current;
+    const note = freeNotes.find((n) => n.id === drag.id);
+    if (!container || !note) return;
+
+    const maxX = Math.max(0, container.clientWidth - note.w);
+    const maxY = Math.max(0, container.clientHeight - note.h);
+    const nextX = Math.min(Math.max(0, drag.originX + dx), maxX);
+    const nextY = Math.min(Math.max(0, drag.originY + dy), maxY);
+    setFreeNotes((prev) => prev.map((n) => (n.id === drag.id ? { ...n, x: nextX, y: nextY } : n)));
+  };
+
+  const endDragFreeNote = () => {
+    noteDragRef.current = null;
   };
 
   const addOrderItem = () => {
@@ -667,6 +725,28 @@ const OrderForm = () => {
           outsideTextInputs.forEach((el) => {
             const shiftUpPx = el.getAttribute("data-pdf-skip-shift") === "true" ? 1 : -2;
             replaceWithUnderlinedText(el, el.value || "", shiftUpPx);
+          });
+
+          const freeNoteTextareas = clonedNode.querySelectorAll<HTMLTextAreaElement>('textarea[data-free-note="true"]');
+          freeNoteTextareas.forEach((el) => {
+            const win = clonedDoc.defaultView;
+            if (!win) return;
+            const cs = win.getComputedStyle(el);
+            const div = clonedDoc.createElement("div");
+            div.style.cssText = el.style.cssText;
+            div.style.boxSizing = "border-box";
+            div.style.fontFamily = cs.fontFamily;
+            div.style.fontSize = cs.fontSize;
+            div.style.fontWeight = cs.fontWeight;
+            div.style.color = cs.color;
+            div.style.backgroundColor = cs.backgroundColor;
+            div.style.border = cs.border;
+            div.style.padding = cs.padding;
+            div.style.whiteSpace = "pre-wrap";
+            div.style.wordBreak = "break-word";
+            div.style.overflow = "hidden";
+            div.textContent = el.value || "";
+            el.replaceWith(div);
           });
 
           const orderTypePhoneEls = clonedNode.querySelectorAll<HTMLElement>('[data-pdf-shift="order-type-phone"]');
@@ -861,6 +941,12 @@ const OrderForm = () => {
               </div>
             </DialogContent>
           </Dialog>
+          <Button variant="outline" size="sm" className="sm:h-10" onClick={clearAll} disabled={isDownloadingPdf}>
+            ล้างข้อมูล
+          </Button>
+          <Button variant="outline" size="sm" className="sm:h-10" onClick={addFreeNote} disabled={isDownloadingPdf}>
+            เพิ่มโน้ต
+          </Button>
           <Button onClick={handleDownloadPdf} className="gap-2 bg-primary hover:bg-primary/90" disabled={isDownloadingPdf} size="sm">
             <Download className="w-4 h-4" />
             ดาวน์โหลด PDF
@@ -869,7 +955,7 @@ const OrderForm = () => {
         <div 
           ref={formRef}
           id="order-form-capture"
-          className="bg-white p-6 shadow-lg mx-auto overflow-auto" 
+          className="bg-white p-6 shadow-lg mx-auto overflow-auto relative" 
           style={{ 
             ...fontSize11Style,
             width: `${a4Width}px`,
@@ -877,6 +963,33 @@ const OrderForm = () => {
             aspectRatio: "297 / 210"
           }}
         >
+          {freeNotes.map((note) => (
+            <div
+              key={note.id}
+              style={{ position: "absolute", left: note.x, top: note.y, width: note.w, height: note.h, zIndex: 30 }}
+              className="bg-white/95 border border-black"
+            >
+              <div
+                className="pdf-hide flex items-center justify-between px-2 h-7 border-b border-black cursor-move select-none"
+                onPointerDown={(e) => startDragFreeNote(note.id, e)}
+                onPointerMove={moveDragFreeNote}
+                onPointerUp={endDragFreeNote}
+                onPointerCancel={endDragFreeNote}
+              >
+                <div className="text-[11px] leading-none">โน้ต</div>
+                <button type="button" className="text-[12px] leading-none px-1" onClick={() => deleteFreeNote(note.id)}>
+                  ×
+                </button>
+              </div>
+              <textarea
+                data-free-note="true"
+                value={note.text}
+                onChange={(e) => updateFreeNoteText(note.id, e.target.value)}
+                className="w-full h-full resize-none bg-transparent outline-none p-2 text-[11pt] leading-snug"
+                style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif" }}
+              />
+            </div>
+          ))}
           {/* Header */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3" style={fontSize11Style}>
