@@ -841,7 +841,7 @@ const OrderForm = () => {
             'table input[data-pdf-shift="table-qty"], table input[data-pdf-shift="table-price"]'
           );
           tableQtyPriceInputs.forEach((input) => {
-            shiftTableValueInputDown(input, 15);
+            shiftTableValueInputDown(input, 25);
           });
 
           const freeNoteContainers = clonedNode.querySelectorAll<HTMLElement>('[data-free-note-container="true"]');
