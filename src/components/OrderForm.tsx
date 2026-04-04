@@ -443,6 +443,16 @@ const OrderForm = () => {
   const [newProductValue, setNewProductValue] = useState("");
   const [freeNotes, setFreeNotes] = useState<Array<{ id: string; x: number; y: number; w: number; h: number; text: string }>>([]);
   const noteDragRef = useRef<{ id: string; startX: number; startY: number; originX: number; originY: number } | null>(null);
+  const noteResizeRef = useRef<{
+    id: string;
+    handle: "nw" | "ne" | "sw" | "se";
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    originW: number;
+    originH: number;
+  } | null>(null);
 
   const apiJson = useCallback(async <T,>(url: string, init: RequestInit = {}): Promise<T> => {
     const apiBaseRaw = (import.meta.env as { VITE_API_BASE?: string }).VITE_API_BASE ?? "";
@@ -597,6 +607,75 @@ const OrderForm = () => {
     noteDragRef.current = null;
   };
 
+  const startResizeFreeNote = (id: string, handle: "nw" | "ne" | "sw" | "se", e: React.PointerEvent) => {
+    const note = freeNotes.find((n) => n.id === id);
+    if (!note) return;
+    noteResizeRef.current = {
+      id,
+      handle,
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: note.x,
+      originY: note.y,
+      originW: note.w,
+      originH: note.h,
+    };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+  };
+
+  const moveResizeFreeNote = (e: React.PointerEvent) => {
+    const resize = noteResizeRef.current;
+    if (!resize) return;
+    const dx = e.clientX - resize.startX;
+    const dy = e.clientY - resize.startY;
+
+    const container = formRef.current;
+    const note = freeNotes.find((n) => n.id === resize.id);
+    if (!container || !note) return;
+
+    const minW = 120;
+    const minH = 60;
+    const containerW = container.clientWidth;
+    const containerH = container.clientHeight;
+
+    const right = resize.originX + resize.originW;
+    const bottom = resize.originY + resize.originH;
+
+    let nextX = resize.originX;
+    let nextY = resize.originY;
+    let nextW = resize.originW;
+    let nextH = resize.originH;
+
+    const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
+
+    if (resize.handle === "se") {
+      nextW = clamp(resize.originW + dx, minW, Math.max(minW, containerW - resize.originX));
+      nextH = clamp(resize.originH + dy, minH, Math.max(minH, containerH - resize.originY));
+    } else if (resize.handle === "sw") {
+      nextX = clamp(resize.originX + dx, 0, Math.max(0, right - minW));
+      nextW = clamp(right - nextX, minW, Math.max(minW, containerW - nextX));
+      nextH = clamp(resize.originH + dy, minH, Math.max(minH, containerH - resize.originY));
+    } else if (resize.handle === "ne") {
+      nextY = clamp(resize.originY + dy, 0, Math.max(0, bottom - minH));
+      nextH = clamp(bottom - nextY, minH, Math.max(minH, containerH - nextY));
+      nextW = clamp(resize.originW + dx, minW, Math.max(minW, containerW - resize.originX));
+    } else {
+      nextX = clamp(resize.originX + dx, 0, Math.max(0, right - minW));
+      nextY = clamp(resize.originY + dy, 0, Math.max(0, bottom - minH));
+      nextW = clamp(right - nextX, minW, Math.max(minW, containerW - nextX));
+      nextH = clamp(bottom - nextY, minH, Math.max(minH, containerH - nextY));
+    }
+
+    setFreeNotes((prev) =>
+      prev.map((n) => (n.id === resize.id ? { ...n, x: nextX, y: nextY, w: nextW, h: nextH } : n))
+    );
+  };
+
+  const endResizeFreeNote = () => {
+    noteResizeRef.current = null;
+  };
+
   const addOrderItem = () => {
     setOrderItems([...orderItems, createEmptyOrderItem()]);
   };
@@ -727,26 +806,37 @@ const OrderForm = () => {
             replaceWithUnderlinedText(el, el.value || "", shiftUpPx);
           });
 
-          const freeNoteTextareas = clonedNode.querySelectorAll<HTMLTextAreaElement>('textarea[data-free-note="true"]');
-          freeNoteTextareas.forEach((el) => {
+          const freeNoteContainers = clonedNode.querySelectorAll<HTMLElement>('[data-free-note-container="true"]');
+          freeNoteContainers.forEach((container) => {
             const win = clonedDoc.defaultView;
             if (!win) return;
-            const cs = win.getComputedStyle(el);
+            const textarea = container.querySelector<HTMLTextAreaElement>('textarea[data-free-note="true"]');
+            if (!textarea) {
+              container.remove();
+              return;
+            }
+
+            const csContainer = win.getComputedStyle(container);
+            const csTextarea = win.getComputedStyle(textarea);
             const div = clonedDoc.createElement("div");
-            div.style.cssText = el.style.cssText;
+            div.style.position = "absolute";
+            div.style.left = csContainer.left;
+            div.style.top = csContainer.top;
+            div.style.width = csContainer.width;
+            div.style.height = csContainer.height;
             div.style.boxSizing = "border-box";
-            div.style.fontFamily = cs.fontFamily;
-            div.style.fontSize = cs.fontSize;
-            div.style.fontWeight = cs.fontWeight;
-            div.style.color = cs.color;
-            div.style.backgroundColor = cs.backgroundColor;
-            div.style.border = cs.border;
-            div.style.padding = cs.padding;
+            div.style.fontFamily = csTextarea.fontFamily;
+            div.style.fontSize = csTextarea.fontSize;
+            div.style.fontWeight = csTextarea.fontWeight;
+            div.style.color = csTextarea.color;
+            div.style.background = "transparent";
+            div.style.border = "0";
+            div.style.padding = csTextarea.padding;
             div.style.whiteSpace = "pre-wrap";
             div.style.wordBreak = "break-word";
-            div.style.overflow = "hidden";
-            div.textContent = el.value || "";
-            el.replaceWith(div);
+            div.style.overflow = "visible";
+            div.textContent = textarea.value || "";
+            container.replaceWith(div);
           });
 
           const orderTypePhoneEls = clonedNode.querySelectorAll<HTMLElement>('[data-pdf-shift="order-type-phone"]');
@@ -966,8 +1056,9 @@ const OrderForm = () => {
           {freeNotes.map((note) => (
             <div
               key={note.id}
+              data-free-note-container="true"
               style={{ position: "absolute", left: note.x, top: note.y, width: note.w, height: note.h, zIndex: 30 }}
-              className="bg-white/95 border border-black"
+              className="bg-transparent border border-dashed border-black/30"
             >
               <div
                 className="pdf-hide flex items-center justify-between px-2 h-7 border-b border-black cursor-move select-none"
@@ -985,8 +1076,36 @@ const OrderForm = () => {
                 data-free-note="true"
                 value={note.text}
                 onChange={(e) => updateFreeNoteText(note.id, e.target.value)}
-                className="w-full h-full resize-none bg-transparent outline-none p-2 text-[11pt] leading-snug"
+                className="w-full h-[calc(100%-1.75rem)] resize-none bg-transparent outline-none p-2 text-[11pt] leading-snug"
                 style={{ fontFamily: "'Angsana New', 'TH Sarabun New', serif" }}
+              />
+              <div
+                className="pdf-hide absolute left-0 top-0 w-4 h-4 cursor-nwse-resize border-l-2 border-t-2 border-black/40"
+                onPointerDown={(e) => startResizeFreeNote(note.id, "nw", e)}
+                onPointerMove={moveResizeFreeNote}
+                onPointerUp={endResizeFreeNote}
+                onPointerCancel={endResizeFreeNote}
+              />
+              <div
+                className="pdf-hide absolute right-0 top-0 w-4 h-4 cursor-nesw-resize border-r-2 border-t-2 border-black/40"
+                onPointerDown={(e) => startResizeFreeNote(note.id, "ne", e)}
+                onPointerMove={moveResizeFreeNote}
+                onPointerUp={endResizeFreeNote}
+                onPointerCancel={endResizeFreeNote}
+              />
+              <div
+                className="pdf-hide absolute left-0 bottom-0 w-4 h-4 cursor-nesw-resize border-l-2 border-b-2 border-black/40"
+                onPointerDown={(e) => startResizeFreeNote(note.id, "sw", e)}
+                onPointerMove={moveResizeFreeNote}
+                onPointerUp={endResizeFreeNote}
+                onPointerCancel={endResizeFreeNote}
+              />
+              <div
+                className="pdf-hide absolute right-0 bottom-0 w-4 h-4 cursor-nwse-resize border-r-2 border-b-2 border-black/40"
+                onPointerDown={(e) => startResizeFreeNote(note.id, "se", e)}
+                onPointerMove={moveResizeFreeNote}
+                onPointerUp={endResizeFreeNote}
+                onPointerCancel={endResizeFreeNote}
               />
             </div>
           ))}
