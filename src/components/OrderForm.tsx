@@ -838,7 +838,7 @@ const OrderForm = () => {
           };
 
           const tableQtyPriceInputs = clonedNode.querySelectorAll<HTMLInputElement>(
-            'table input[data-pdf-shift="table-qty"], table input[data-pdf-shift="table-price"]'
+            'table input:not([type="checkbox"]):not([type="radio"])'
           );
           tableQtyPriceInputs.forEach((input) => {
             shiftTableValueInputDown(input, 25);
