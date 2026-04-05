@@ -533,7 +533,7 @@ const OrderForm = () => {
     }
     if (!supabase) {
       toast.error("ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
-      navigate("/po-list", { replace: true });
+      navigate("/", { replace: true });
       return;
     }
 
@@ -544,7 +544,7 @@ const OrderForm = () => {
       const { data, error } = await supabase.from("pos").select("id, order_date, data").eq("id", poIdParam).single();
       if (error || !data) {
         toast.error("ไม่พบรายการ PO ที่บันทึกไว้");
-        navigate("/po-list", { replace: true });
+        navigate("/", { replace: true });
         return;
       }
 
@@ -1219,7 +1219,7 @@ const OrderForm = () => {
               </div>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" size="sm" className="sm:h-10" onClick={() => navigate("/po-list")} disabled={isDownloadingPdf}>
+          <Button variant="outline" size="sm" className="sm:h-10" onClick={() => navigate("/")} disabled={isDownloadingPdf}>
             <List className="w-4 h-4" />
             รายการ PO
           </Button>

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -64,7 +65,10 @@ const PoList = () => {
             <Button variant="outline" onClick={() => void load()} disabled={loading}>
               รีเฟรช
             </Button>
-            <Button onClick={() => navigate("/")}>กลับไปหน้าแบบฟอร์ม</Button>
+            <Button onClick={() => navigate("/po/new")} disabled={loading}>
+              <Plus className="w-4 h-4" />
+              สร้าง PO ใหม่
+            </Button>
           </div>
         </div>
 

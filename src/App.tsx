@@ -16,8 +16,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<PoList />} />
           <Route path="/po-list" element={<PoList />} />
+          <Route path="/po/new" element={<Index />} />
           <Route path="/po/:id" element={<Index />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
