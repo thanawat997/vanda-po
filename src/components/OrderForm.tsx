@@ -1120,7 +1120,7 @@ const OrderForm = () => {
   return (
     <div className="min-h-screen bg-muted p-2 sm:p-4">
       <div className="max-w-[1200px] mx-auto">
-        <div className="sticky top-0 z-10 flex justify-end gap-2 py-2 mb-2 bg-muted/80 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-end gap-2 py-2 mb-2 bg-muted/80 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
           <Dialog open={isDropdownManagerOpen} onOpenChange={setIsDropdownManagerOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="sm:h-10">
@@ -1238,17 +1238,18 @@ const OrderForm = () => {
             ดาวน์โหลด PDF
           </Button>
         </div>
-        <div 
-          ref={formRef}
-          id="order-form-capture"
-          className="bg-white p-6 shadow-lg mx-auto overflow-auto relative" 
-          style={{ 
-            ...fontSize11Style,
-            width: `${a4Width}px`,
-            minHeight: `${a4Height}px`,
-            aspectRatio: "297 / 210"
-          }}
-        >
+        <div className="w-full overflow-x-auto pb-6">
+          <div
+            ref={formRef}
+            id="order-form-capture"
+            className="bg-white p-3 sm:p-6 shadow-lg mx-auto relative"
+            style={{
+              ...fontSize11Style,
+              width: `${a4Width}px`,
+              minHeight: `${a4Height}px`,
+              aspectRatio: "297 / 210",
+            }}
+          >
           {freeNotes.map((note) => (
             <div
               key={note.id}
@@ -1923,6 +1924,7 @@ const OrderForm = () => {
           <div className="flex justify-between mt-3 text-gray-600" style={fontSize11Style}>
             <div style={{ ...fontSize11Style, fontSize: "9px" }}>&quot;Electronic Document Control But UnControlled When Printed Out เอกสารจะไม่ควบคุม เมื่อพิมพ์ออกมาแล้ว&quot;</div>
             <div style={{ ...fontSize11Style, fontSize: "9px" }}>ED : 24/4/2024</div>
+          </div>
           </div>
         </div>
 
