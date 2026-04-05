@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, Plus, CalendarIcon, Check, ChevronDown } from "lucide-react";
+import { Download, Plus, CalendarIcon, Check, ChevronDown, Save, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import logo from "@/assets/logo.png";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/lib/supabaseClient";
 
 // Common styles for fonts
 const fontSize11Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" };
@@ -380,6 +383,9 @@ interface OrderItem {
 
 const OrderForm = () => {
   const formRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { id: poIdParam } = useParams();
+  const [searchParams] = useSearchParams();
   const getInitialFormData = () => ({
     orderType: { phone: false, po: false, other: false },
     poNumber: "",
@@ -454,6 +460,12 @@ const OrderForm = () => {
     originH: number;
   } | null>(null);
 
+  const [loadedPoId, setLoadedPoId] = useState<string | null>(null);
+  const activePoId = poIdParam ?? loadedPoId;
+  const [poLoadedOnce, setPoLoadedOnce] = useState(false);
+  const autoDownloadRef = useRef(false);
+  const shouldAutoDownload = searchParams.get("download") === "1";
+
   const apiJson = useCallback(async <T,>(url: string, init: RequestInit = {}): Promise<T> => {
     const apiBaseRaw = (import.meta.env as { VITE_API_BASE?: string }).VITE_API_BASE ?? "";
     const apiBase = apiBaseRaw.replace(/\/+$/, "");
@@ -513,6 +525,67 @@ const OrderForm = () => {
     void loadDropdowns();
   }, [isDropdownManagerOpen, loadDropdowns]);
 
+  useEffect(() => {
+    if (!poIdParam) {
+      setLoadedPoId(null);
+      setPoLoadedOnce(false);
+      return;
+    }
+    if (!supabase) {
+      toast.error("ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+      navigate("/po-list", { replace: true });
+      return;
+    }
+
+    setPoLoadedOnce(false);
+    autoDownloadRef.current = false;
+
+    const run = async () => {
+      const { data, error } = await supabase.from("pos").select("id, order_date, data").eq("id", poIdParam).single();
+      if (error || !data) {
+        toast.error("ไม่พบรายการ PO ที่บันทึกไว้");
+        navigate("/po-list", { replace: true });
+        return;
+      }
+
+      const payload = (data as { data: unknown }).data as {
+        formData?: {
+          orderType?: { phone: boolean; po: boolean; other: boolean };
+          poNumber?: string;
+          otherText?: string;
+          orderNumber?: string;
+          customerName?: string;
+          date?: string | null;
+          contactPerson?: string;
+        };
+        orderItems?: OrderItem[];
+        signature?: string;
+        freeNotes?: Array<{ id: string; x: number; y: number; w: number; h: number; text: string }>;
+      };
+
+      const dateFromPayload = payload?.formData?.date ? new Date(payload.formData.date) : undefined;
+      const dateFromColumn = (data as { order_date?: string | null }).order_date ? new Date((data as { order_date: string }).order_date) : undefined;
+      const date = dateFromPayload ?? dateFromColumn;
+
+      setFormData({
+        orderType: payload?.formData?.orderType ?? getInitialFormData().orderType,
+        poNumber: payload?.formData?.poNumber ?? "",
+        otherText: payload?.formData?.otherText ?? "",
+        orderNumber: payload?.formData?.orderNumber ?? "",
+        customerName: payload?.formData?.customerName ?? "",
+        date,
+        contactPerson: payload?.formData?.contactPerson ?? "",
+      });
+      setOrderItems(Array.isArray(payload?.orderItems) ? payload.orderItems : Array.from({ length: 4 }, () => createEmptyOrderItem()));
+      setSignature(typeof payload?.signature === "string" ? payload.signature : "");
+      setFreeNotes(Array.isArray(payload?.freeNotes) ? payload.freeNotes : []);
+      setLoadedPoId((data as { id: string }).id);
+      setPoLoadedOnce(true);
+    };
+
+    void run();
+  }, [navigate, poIdParam]);
+
   const addProductType = async () => {
     const value = newProductTypeValue.trim();
     if (!value) return;
@@ -562,6 +635,55 @@ const OrderForm = () => {
     setOpenProductTypeDropdownIndex(null);
     setIsDatePickerOpen(false);
     setIsDropdownManagerOpen(false);
+  };
+
+  const [isSavingPo, setIsSavingPo] = useState(false);
+
+  const handleSavePO = async () => {
+    if (!supabase) {
+      toast.error("ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+      return;
+    }
+
+    setIsSavingPo(true);
+    try {
+      const toDateOnly = (d: Date) => d.toISOString().slice(0, 10);
+      const payload = {
+        formData: {
+          ...formData,
+          date: formData.date ? formData.date.toISOString() : null,
+        },
+        orderItems,
+        signature,
+        freeNotes,
+      };
+
+      const row = {
+        customer_name: formData.customerName || null,
+        po_number: formData.poNumber || null,
+        order_number: formData.orderNumber || null,
+        contact_person: formData.contactPerson || null,
+        order_date: formData.date ? toDateOnly(formData.date) : null,
+        data: payload,
+      };
+
+      if (activePoId) {
+        const { error } = await supabase.from("pos").update(row).eq("id", activePoId);
+        if (error) throw error;
+        toast.success("บันทึก PO แล้ว");
+        return;
+      }
+
+      const { data, error } = await supabase.from("pos").insert(row).select("id").single();
+      if (error || !data) throw error;
+      setLoadedPoId(data.id);
+      navigate(`/po/${data.id}`, { replace: true });
+      toast.success("บันทึก PO แล้ว");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "บันทึก PO ไม่สำเร็จ");
+    } finally {
+      setIsSavingPo(false);
+    }
   };
 
   const addFreeNote = () => {
@@ -695,7 +817,10 @@ const OrderForm = () => {
   const a4Width = 297 * 3.78; // mm to px at 96dpi
   const a4Height = 210 * 3.78;
 
-  const handleDownloadPdf = async () => {
+  const dateForPdf = formData.date;
+  const customerNameForPdf = formData.customerName;
+
+  const handleDownloadPdf = useCallback(async () => {
     const node = formRef.current;
     if (!node) return;
 
@@ -799,7 +924,7 @@ const OrderForm = () => {
 
           const dateButton = clonedNode.querySelector<HTMLButtonElement>('[data-pdf-date-trigger="true"]');
           if (dateButton) {
-            const dateText = formData.date ? format(formData.date, "dd/MM/yyyy", { locale: th }) : "";
+            const dateText = dateForPdf ? format(dateForPdf, "dd/MM/yyyy", { locale: th }) : "";
             replaceWithUnderlinedText(dateButton, dateText, -2);
           }
 
@@ -966,11 +1091,31 @@ const OrderForm = () => {
         pageIndex += 1;
       }
 
-      pdf.save("ใบบันทึกการรับการสั่งซื้อ.pdf");
+      const toSafeFileBase = (value: string) => {
+        const normalized = value
+          .replace(/[\\/:*?"<>|]/g, "-")
+          .replace(/\s+/g, " ")
+          .trim()
+          .replace(/^[.\s-]+|[.\s-]+$/g, "");
+        return normalized.slice(0, 80);
+      };
+
+      const customerName = toSafeFileBase(customerNameForPdf || "");
+      const fileBase = customerName || "ใบบันทึกการรับการสั่งซื้อ";
+      pdf.save(`${fileBase}.pdf`);
     } finally {
       setIsDownloadingPdf(false);
     }
-  };
+  }, [customerNameForPdf, dateForPdf]);
+
+  useEffect(() => {
+    if (!poIdParam) return;
+    if (!poLoadedOnce) return;
+    if (!shouldAutoDownload) return;
+    if (autoDownloadRef.current) return;
+    autoDownloadRef.current = true;
+    void handleDownloadPdf();
+  }, [handleDownloadPdf, poIdParam, poLoadedOnce, shouldAutoDownload]);
 
   return (
     <div className="min-h-screen bg-muted p-2 sm:p-4">
@@ -1074,11 +1219,19 @@ const OrderForm = () => {
               </div>
             </DialogContent>
           </Dialog>
+          <Button variant="outline" size="sm" className="sm:h-10" onClick={() => navigate("/po-list")} disabled={isDownloadingPdf}>
+            <List className="w-4 h-4" />
+            รายการ PO
+          </Button>
           <Button variant="outline" size="sm" className="sm:h-10" onClick={clearAll} disabled={isDownloadingPdf}>
             ล้างข้อมูล
           </Button>
           <Button variant="outline" size="sm" className="sm:h-10" onClick={addFreeNote} disabled={isDownloadingPdf}>
             เพิ่มโน้ต
+          </Button>
+          <Button variant="outline" size="sm" className="sm:h-10" onClick={handleSavePO} disabled={isDownloadingPdf || isSavingPo}>
+            <Save className="w-4 h-4" />
+            บันทึก
           </Button>
           <Button onClick={handleDownloadPdf} className="gap-2 bg-primary hover:bg-primary/90" disabled={isDownloadingPdf} size="sm">
             <Download className="w-4 h-4" />
