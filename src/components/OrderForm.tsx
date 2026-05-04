@@ -14,7 +14,7 @@ import { jsPDF } from "jspdf";
 import logo from "@/assets/logo.png";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/lib/supabaseClient";
+import { formatSupabaseError, supabase, supabaseConfigError } from "@/lib/supabaseClient";
 
 // Common styles for fonts
 const fontSize11Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" };
@@ -532,7 +532,7 @@ const OrderForm = () => {
       return;
     }
     if (!supabase) {
-      toast.error("ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+      toast.error(supabaseConfigError ?? "เชื่อมต่อฐานข้อมูลไม่ได้");
       navigate("/", { replace: true });
       return;
     }
@@ -641,7 +641,7 @@ const OrderForm = () => {
 
   const handleSavePO = async () => {
     if (!supabase) {
-      toast.error("ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+      toast.error(supabaseConfigError ?? "เชื่อมต่อฐานข้อมูลไม่ได้");
       return;
     }
 
@@ -680,7 +680,7 @@ const OrderForm = () => {
       navigate(`/po/${data.id}`, { replace: true });
       toast.success("บันทึก PO แล้ว");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "บันทึก PO ไม่สำเร็จ");
+      toast.error(formatSupabaseError(err));
     } finally {
       setIsSavingPo(false);
     }
