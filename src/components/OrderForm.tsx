@@ -14,7 +14,7 @@ import { jsPDF } from "jspdf";
 import logo from "@/assets/logo.png";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import { formatSupabaseError, supabase, supabaseConfigError } from "@/lib/supabaseClient";
+import { supabase, supabaseConfigError } from "@/lib/supabaseClient";
 
 // Common styles for fonts
 const fontSize11Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" };
@@ -532,7 +532,7 @@ const OrderForm = () => {
       return;
     }
     if (!supabase) {
-      toast.error(supabaseConfigError ?? "เชื่อมต่อฐานข้อมูลไม่ได้");
+      toast.error(supabaseConfigError ?? "ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
       navigate("/", { replace: true });
       return;
     }
@@ -541,46 +541,59 @@ const OrderForm = () => {
     autoDownloadRef.current = false;
 
     const run = async () => {
-      const { data, error } = await supabase.from("pos").select("id, order_date, data").eq("id", poIdParam).single();
-      if (error || !data) {
-        toast.error("ไม่พบรายการ PO ที่บันทึกไว้");
-        navigate("/", { replace: true });
-        return;
-      }
+      try {
+        const { data, error } = await supabase.from("pos").select("id, order_date, data").eq("id", poIdParam).single();
+        if (error || !data) {
+          toast.error("ไม่พบรายการ PO ที่บันทึกไว้");
+          navigate("/", { replace: true });
+          return;
+        }
 
-      const payload = (data as { data: unknown }).data as {
-        formData?: {
-          orderType?: { phone: boolean; po: boolean; other: boolean };
-          poNumber?: string;
-          otherText?: string;
-          orderNumber?: string;
-          customerName?: string;
-          date?: string | null;
-          contactPerson?: string;
+        const payload = (data as { data: unknown }).data as {
+          formData?: {
+            orderType?: { phone: boolean; po: boolean; other: boolean };
+            poNumber?: string;
+            otherText?: string;
+            orderNumber?: string;
+            customerName?: string;
+            date?: string | null;
+            contactPerson?: string;
+          };
+          orderItems?: OrderItem[];
+          signature?: string;
+          freeNotes?: Array<{ id: string; x: number; y: number; w: number; h: number; text: string }>;
         };
-        orderItems?: OrderItem[];
-        signature?: string;
-        freeNotes?: Array<{ id: string; x: number; y: number; w: number; h: number; text: string }>;
-      };
 
-      const dateFromPayload = payload?.formData?.date ? new Date(payload.formData.date) : undefined;
-      const dateFromColumn = (data as { order_date?: string | null }).order_date ? new Date((data as { order_date: string }).order_date) : undefined;
-      const date = dateFromPayload ?? dateFromColumn;
+        const dateFromPayload = payload?.formData?.date ? new Date(payload.formData.date) : undefined;
+        const dateFromColumn = (data as { order_date?: string | null }).order_date ? new Date((data as { order_date: string }).order_date) : undefined;
+        const date = dateFromPayload ?? dateFromColumn;
 
-      setFormData({
-        orderType: payload?.formData?.orderType ?? getInitialFormData().orderType,
-        poNumber: payload?.formData?.poNumber ?? "",
-        otherText: payload?.formData?.otherText ?? "",
-        orderNumber: payload?.formData?.orderNumber ?? "",
-        customerName: payload?.formData?.customerName ?? "",
-        date,
-        contactPerson: payload?.formData?.contactPerson ?? "",
-      });
-      setOrderItems(Array.isArray(payload?.orderItems) ? payload.orderItems : Array.from({ length: 4 }, () => createEmptyOrderItem()));
-      setSignature(typeof payload?.signature === "string" ? payload.signature : "");
-      setFreeNotes(Array.isArray(payload?.freeNotes) ? payload.freeNotes : []);
-      setLoadedPoId((data as { id: string }).id);
-      setPoLoadedOnce(true);
+        setFormData({
+          orderType: payload?.formData?.orderType ?? getInitialFormData().orderType,
+          poNumber: payload?.formData?.poNumber ?? "",
+          otherText: payload?.formData?.otherText ?? "",
+          orderNumber: payload?.formData?.orderNumber ?? "",
+          customerName: payload?.formData?.customerName ?? "",
+          date,
+          contactPerson: payload?.formData?.contactPerson ?? "",
+        });
+        setOrderItems(Array.isArray(payload?.orderItems) ? payload.orderItems : Array.from({ length: 4 }, () => createEmptyOrderItem()));
+        setSignature(typeof payload?.signature === "string" ? payload.signature : "");
+        setFreeNotes(Array.isArray(payload?.freeNotes) ? payload.freeNotes : []);
+        setLoadedPoId((data as { id: string }).id);
+        setPoLoadedOnce(true);
+      } catch (err) {
+        const message =
+          typeof supabaseConfigError === "string" && supabaseConfigError
+            ? supabaseConfigError
+            : err instanceof TypeError && /fetch/i.test(err.message)
+              ? "เชื่อมต่อ Supabase ไม่ได้ (ตรวจสอบ VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY และ Redeploy)"
+              : err instanceof Error
+                ? err.message
+                : "โหลดข้อมูลไม่สำเร็จ";
+        toast.error(message);
+        navigate("/", { replace: true });
+      }
     };
 
     void run();
@@ -641,7 +654,7 @@ const OrderForm = () => {
 
   const handleSavePO = async () => {
     if (!supabase) {
-      toast.error(supabaseConfigError ?? "เชื่อมต่อฐานข้อมูลไม่ได้");
+      toast.error(supabaseConfigError ?? "ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
       return;
     }
 
@@ -680,7 +693,15 @@ const OrderForm = () => {
       navigate(`/po/${data.id}`, { replace: true });
       toast.success("บันทึก PO แล้ว");
     } catch (err) {
-      toast.error(formatSupabaseError(err));
+      const message =
+        typeof supabaseConfigError === "string" && supabaseConfigError
+          ? supabaseConfigError
+          : err instanceof TypeError && /fetch/i.test(err.message)
+            ? "เชื่อมต่อ Supabase ไม่ได้ (ตรวจสอบ VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY และ Redeploy)"
+            : err instanceof Error
+              ? err.message
+              : "บันทึก PO ไม่สำเร็จ";
+      toast.error(message);
     } finally {
       setIsSavingPo(false);
     }

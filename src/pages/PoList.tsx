@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { formatSupabaseError, supabase, supabaseConfigError, supabaseUrlHost } from "@/lib/supabaseClient";
+import { supabase, supabaseConfigError } from "@/lib/supabaseClient";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { Plus } from "lucide-react";
@@ -22,6 +22,13 @@ const safeParseDate = (value: string) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+const formatLoadError = (err: unknown) => {
+  if (typeof supabaseConfigError === "string" && supabaseConfigError) return supabaseConfigError;
+  if (err instanceof TypeError && /fetch/i.test(err.message)) return "เชื่อมต่อ Supabase ไม่ได้ (ตรวจสอบ VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY และ Redeploy)";
+  if (err instanceof Error) return err.message;
+  return "โหลดรายการไม่สำเร็จ";
+};
+
 const PoList = () => {
   const navigate = useNavigate();
   const [records, setRecords] = useState<POListRow[]>([]);
@@ -30,7 +37,7 @@ const PoList = () => {
 
   const load = async () => {
     if (!supabase) {
-      setError(supabaseConfigError ?? "เชื่อมต่อฐานข้อมูลไม่ได้");
+      setError(supabaseConfigError ?? "ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
       setRecords([]);
       return;
     }
@@ -46,7 +53,7 @@ const PoList = () => {
       if (error) throw error;
       setRecords((data ?? []) as POListRow[]);
     } catch (err) {
-      setError(formatSupabaseError(err));
+      setError(formatLoadError(err));
       setRecords([]);
     } finally {
       setLoading(false);
@@ -76,17 +83,7 @@ const PoList = () => {
           </div>
         </div>
 
-        {error && (
-          <div className="bg-white border rounded-md p-4 mb-4 text-sm">
-            <div className="text-destructive">{error}</div>
-            {!!supabaseUrlHost && (
-              <details className="mt-2">
-                <summary className="cursor-pointer text-xs text-muted-foreground">รายละเอียดการเชื่อมต่อ</summary>
-                <div className="text-xs text-muted-foreground mt-2">Supabase Host: {supabaseUrlHost}</div>
-              </details>
-            )}
-          </div>
-        )}
+        {error && <div className="bg-white border rounded-md p-4 mb-4 text-sm text-destructive">{error}</div>}
 
         {records.length === 0 ? (
           <div className="bg-white border rounded-md p-6 text-sm text-muted-foreground">
