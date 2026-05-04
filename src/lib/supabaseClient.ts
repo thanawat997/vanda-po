@@ -1,22 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = ((import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL ?? "").trim();
-const supabaseAnonKey = ((import.meta.env as { VITE_SUPABASE_ANON_KEY?: string }).VITE_SUPABASE_ANON_KEY ?? "").trim();
+const normalizeEnv = (value: string | undefined) => {
+  const v = value?.trim();
+  if (!v) return undefined;
+  return v.replace(/^['"`]/, "").replace(/['"`]$/, "");
+};
 
-export const supabaseConfigError = (() => {
-  if (!supabaseUrl) return "ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL";
-  if (!supabaseAnonKey) return "ยังไม่ได้ตั้งค่า VITE_SUPABASE_ANON_KEY";
-  try {
-    const url = new URL(supabaseUrl);
-    if (url.protocol !== "https:") return "VITE_SUPABASE_URL ต้องขึ้นต้นด้วย https://";
-  } catch {
-    return "VITE_SUPABASE_URL ไม่ถูกต้อง";
-  }
-  return null;
-})();
+const supabaseUrl = normalizeEnv((import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL);
+const supabaseAnonKey = normalizeEnv((import.meta.env as { VITE_SUPABASE_ANON_KEY?: string }).VITE_SUPABASE_ANON_KEY);
 
-export const supabase = supabaseConfigError
-  ? null
-  : createClient(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: false },
-    });
+export const supabase =
+  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } }) : null;

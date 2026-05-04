@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { supabase, supabaseConfigError } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { Plus } from "lucide-react";
@@ -17,16 +17,17 @@ type POListRow = {
   order_date: string | null;
 };
 
+const getErrorMessage = (err: unknown) => {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err && "message" in err && typeof (err as { message?: unknown }).message === "string") {
+    return (err as { message: string }).message;
+  }
+  return "โหลดรายการไม่สำเร็จ";
+};
+
 const safeParseDate = (value: string) => {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
-};
-
-const formatLoadError = (err: unknown) => {
-  if (typeof supabaseConfigError === "string" && supabaseConfigError) return supabaseConfigError;
-  if (err instanceof TypeError && /fetch/i.test(err.message)) return "เชื่อมต่อ Supabase ไม่ได้ (ตรวจสอบ VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY และ Redeploy)";
-  if (err instanceof Error) return err.message;
-  return "โหลดรายการไม่สำเร็จ";
 };
 
 const PoList = () => {
@@ -37,7 +38,7 @@ const PoList = () => {
 
   const load = async () => {
     if (!supabase) {
-      setError(supabaseConfigError ?? "ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+      setError("ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
       setRecords([]);
       return;
     }
@@ -53,7 +54,7 @@ const PoList = () => {
       if (error) throw error;
       setRecords((data ?? []) as POListRow[]);
     } catch (err) {
-      setError(formatLoadError(err));
+      setError(getErrorMessage(err));
       setRecords([]);
     } finally {
       setLoading(false);

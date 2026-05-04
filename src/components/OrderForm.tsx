@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, Plus, CalendarIcon, Check, ChevronDown, Save, List } from "lucide-react";
+import { Download, Plus, CalendarIcon, Check, ChevronDown, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,7 +14,7 @@ import { jsPDF } from "jspdf";
 import logo from "@/assets/logo.png";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
-import { supabase, supabaseConfigError } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 // Common styles for fonts
 const fontSize11Style = { fontFamily: "'Angsana New', 'TH Sarabun New', serif", fontSize: "11pt" };
@@ -532,7 +532,7 @@ const OrderForm = () => {
       return;
     }
     if (!supabase) {
-      toast.error(supabaseConfigError ?? "ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+      toast.error("ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
       navigate("/", { replace: true });
       return;
     }
@@ -541,59 +541,46 @@ const OrderForm = () => {
     autoDownloadRef.current = false;
 
     const run = async () => {
-      try {
-        const { data, error } = await supabase.from("pos").select("id, order_date, data").eq("id", poIdParam).single();
-        if (error || !data) {
-          toast.error("ไม่พบรายการ PO ที่บันทึกไว้");
-          navigate("/", { replace: true });
-          return;
-        }
-
-        const payload = (data as { data: unknown }).data as {
-          formData?: {
-            orderType?: { phone: boolean; po: boolean; other: boolean };
-            poNumber?: string;
-            otherText?: string;
-            orderNumber?: string;
-            customerName?: string;
-            date?: string | null;
-            contactPerson?: string;
-          };
-          orderItems?: OrderItem[];
-          signature?: string;
-          freeNotes?: Array<{ id: string; x: number; y: number; w: number; h: number; text: string }>;
-        };
-
-        const dateFromPayload = payload?.formData?.date ? new Date(payload.formData.date) : undefined;
-        const dateFromColumn = (data as { order_date?: string | null }).order_date ? new Date((data as { order_date: string }).order_date) : undefined;
-        const date = dateFromPayload ?? dateFromColumn;
-
-        setFormData({
-          orderType: payload?.formData?.orderType ?? getInitialFormData().orderType,
-          poNumber: payload?.formData?.poNumber ?? "",
-          otherText: payload?.formData?.otherText ?? "",
-          orderNumber: payload?.formData?.orderNumber ?? "",
-          customerName: payload?.formData?.customerName ?? "",
-          date,
-          contactPerson: payload?.formData?.contactPerson ?? "",
-        });
-        setOrderItems(Array.isArray(payload?.orderItems) ? payload.orderItems : Array.from({ length: 4 }, () => createEmptyOrderItem()));
-        setSignature(typeof payload?.signature === "string" ? payload.signature : "");
-        setFreeNotes(Array.isArray(payload?.freeNotes) ? payload.freeNotes : []);
-        setLoadedPoId((data as { id: string }).id);
-        setPoLoadedOnce(true);
-      } catch (err) {
-        const message =
-          typeof supabaseConfigError === "string" && supabaseConfigError
-            ? supabaseConfigError
-            : err instanceof TypeError && /fetch/i.test(err.message)
-              ? "เชื่อมต่อ Supabase ไม่ได้ (ตรวจสอบ VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY และ Redeploy)"
-              : err instanceof Error
-                ? err.message
-                : "โหลดข้อมูลไม่สำเร็จ";
-        toast.error(message);
+      const { data, error } = await supabase.from("pos").select("id, order_date, data").eq("id", poIdParam).single();
+      if (error || !data) {
+        toast.error("ไม่พบรายการ PO ที่บันทึกไว้");
         navigate("/", { replace: true });
+        return;
       }
+
+      const payload = (data as { data: unknown }).data as {
+        formData?: {
+          orderType?: { phone: boolean; po: boolean; other: boolean };
+          poNumber?: string;
+          otherText?: string;
+          orderNumber?: string;
+          customerName?: string;
+          date?: string | null;
+          contactPerson?: string;
+        };
+        orderItems?: OrderItem[];
+        signature?: string;
+        freeNotes?: Array<{ id: string; x: number; y: number; w: number; h: number; text: string }>;
+      };
+
+      const dateFromPayload = payload?.formData?.date ? new Date(payload.formData.date) : undefined;
+      const dateFromColumn = (data as { order_date?: string | null }).order_date ? new Date((data as { order_date: string }).order_date) : undefined;
+      const date = dateFromPayload ?? dateFromColumn;
+
+      setFormData({
+        orderType: payload?.formData?.orderType ?? getInitialFormData().orderType,
+        poNumber: payload?.formData?.poNumber ?? "",
+        otherText: payload?.formData?.otherText ?? "",
+        orderNumber: payload?.formData?.orderNumber ?? "",
+        customerName: payload?.formData?.customerName ?? "",
+        date,
+        contactPerson: payload?.formData?.contactPerson ?? "",
+      });
+      setOrderItems(Array.isArray(payload?.orderItems) ? payload.orderItems : Array.from({ length: 4 }, () => createEmptyOrderItem()));
+      setSignature(typeof payload?.signature === "string" ? payload.signature : "");
+      setFreeNotes(Array.isArray(payload?.freeNotes) ? payload.freeNotes : []);
+      setLoadedPoId((data as { id: string }).id);
+      setPoLoadedOnce(true);
     };
 
     void run();
@@ -651,10 +638,22 @@ const OrderForm = () => {
   };
 
   const [isSavingPo, setIsSavingPo] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSaveSeqRef = useRef(0);
+  const lastSavedSnapshotRef = useRef<string | null>(null);
 
-  const handleSavePO = async () => {
+  const getErrorMessage = (err: unknown) => {
+    if (err instanceof Error) return err.message;
+    if (typeof err === "object" && err && "message" in err && typeof (err as { message?: unknown }).message === "string") {
+      return (err as { message: string }).message;
+    }
+    return "บันทึก PO ไม่สำเร็จ";
+  };
+
+  const persistPO = useCallback(async (mode: "insert" | "update") => {
     if (!supabase) {
-      toast.error(supabaseConfigError ?? "ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+      toast.error("ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
       return;
     }
 
@@ -680,10 +679,9 @@ const OrderForm = () => {
         data: payload,
       };
 
-      if (activePoId) {
+      if (mode === "update" && activePoId) {
         const { error } = await supabase.from("pos").update(row).eq("id", activePoId);
         if (error) throw error;
-        toast.success("บันทึก PO แล้ว");
         return;
       }
 
@@ -691,21 +689,100 @@ const OrderForm = () => {
       if (error || !data) throw error;
       setLoadedPoId(data.id);
       navigate(`/po/${data.id}`, { replace: true });
-      toast.success("บันทึก PO แล้ว");
-    } catch (err) {
-      const message =
-        typeof supabaseConfigError === "string" && supabaseConfigError
-          ? supabaseConfigError
-          : err instanceof TypeError && /fetch/i.test(err.message)
-            ? "เชื่อมต่อ Supabase ไม่ได้ (ตรวจสอบ VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY และ Redeploy)"
-            : err instanceof Error
-              ? err.message
-              : "บันทึก PO ไม่สำเร็จ";
-      toast.error(message);
     } finally {
       setIsSavingPo(false);
     }
-  };
+  }, [activePoId, formData, freeNotes, navigate, orderItems, signature]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    if (isDownloadingPdf) return;
+    if (isSavingPo) return;
+    if (!poLoadedOnce && poIdParam) return;
+
+    const hasMeaningfulContent = () => {
+      if (
+        formData.customerName.trim() ||
+        formData.poNumber.trim() ||
+        formData.orderNumber.trim() ||
+        formData.contactPerson.trim() ||
+        formData.otherText.trim() ||
+        signature.trim()
+      ) {
+        return true;
+      }
+      if (formData.date) return true;
+      if (freeNotes.some((n) => n.text.trim())) return true;
+      return orderItems.some((i) => {
+        if (i.ps || i.pp || i.pet || i.pla || i.hotFood || i.normalTemp || i.coldTemp || i.freezeTemp || i.otherUsage || i.foreign) return true;
+        return [
+          i.productType,
+          i.size,
+          i.details,
+          i.quantity,
+          i.price,
+          i.deliveryDate,
+          i.deliverableNote,
+          i.notDeliverableNote,
+          i.exportType,
+          i.thai,
+          i.lawRef,
+          i.notes,
+        ].some((v) => String(v ?? "").trim());
+      });
+    };
+
+    const snapshot = JSON.stringify({
+      formData: {
+        ...formData,
+        date: formData.date ? formData.date.toISOString() : null,
+      },
+      orderItems,
+      signature,
+      freeNotes,
+    });
+
+    if (poIdParam && poLoadedOnce && lastSavedSnapshotRef.current === null) {
+      lastSavedSnapshotRef.current = snapshot;
+      setAutoSaveStatus("saved");
+      return;
+    }
+
+    if (!hasMeaningfulContent()) {
+      setAutoSaveStatus("idle");
+      return;
+    }
+
+    if (lastSavedSnapshotRef.current === snapshot) {
+      setAutoSaveStatus("saved");
+      return;
+    }
+
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    setAutoSaveStatus("idle");
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      const seq = ++autoSaveSeqRef.current;
+      setAutoSaveStatus("saving");
+      const run = async () => {
+        try {
+          await persistPO(activePoId ? "update" : "insert");
+          if (seq !== autoSaveSeqRef.current) return;
+          lastSavedSnapshotRef.current = snapshot;
+          setAutoSaveStatus("saved");
+        } catch (err) {
+          if (seq !== autoSaveSeqRef.current) return;
+          setAutoSaveStatus("error");
+          toast.error(getErrorMessage(err));
+        }
+      };
+      void run();
+    }, 900);
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [activePoId, formData, freeNotes, isDownloadingPdf, isSavingPo, orderItems, persistPO, poIdParam, poLoadedOnce, signature]);
 
   const addFreeNote = () => {
     const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
@@ -1142,6 +1219,11 @@ const OrderForm = () => {
     <div className="min-h-screen bg-muted p-2 sm:p-4">
       <div className="max-w-[1200px] mx-auto">
         <div className="sticky top-0 z-10 flex flex-wrap items-center justify-end gap-2 py-2 mb-2 bg-muted/80 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
+          {autoSaveStatus !== "idle" && (
+            <div className="mr-auto text-xs text-muted-foreground">
+              {autoSaveStatus === "saving" ? "กำลังบันทึก..." : autoSaveStatus === "saved" ? "บันทึกอัตโนมัติแล้ว" : "บันทึกไม่สำเร็จ"}
+            </div>
+          )}
           <Dialog open={isDropdownManagerOpen} onOpenChange={setIsDropdownManagerOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="sm:h-10">
@@ -1249,10 +1331,6 @@ const OrderForm = () => {
           </Button>
           <Button variant="outline" size="sm" className="sm:h-10" onClick={addFreeNote} disabled={isDownloadingPdf}>
             เพิ่มโน้ต
-          </Button>
-          <Button variant="outline" size="sm" className="sm:h-10" onClick={handleSavePO} disabled={isDownloadingPdf || isSavingPo}>
-            <Save className="w-4 h-4" />
-            บันทึก
           </Button>
           <Button onClick={handleDownloadPdf} className="gap-2 bg-primary hover:bg-primary/90" disabled={isDownloadingPdf} size="sm">
             <Download className="w-4 h-4" />
