@@ -9,5 +9,8 @@ const normalizeEnv = (value: string | undefined) => {
 const supabaseUrl = normalizeEnv((import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL);
 const supabaseAnonKey = normalizeEnv((import.meta.env as { VITE_SUPABASE_ANON_KEY?: string }).VITE_SUPABASE_ANON_KEY);
 
+export const resolvedSupabaseUrl = supabaseUrl;
+export const supabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
 export const supabase =
   supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } }) : null;

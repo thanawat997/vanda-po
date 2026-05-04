@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabaseClient";
+import { resolvedSupabaseUrl, supabase } from "@/lib/supabaseClient";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { Plus } from "lucide-react";
@@ -85,6 +85,17 @@ const PoList = () => {
         </div>
 
         {error && <div className="bg-white border rounded-md p-4 mb-4 text-sm text-destructive">{error}</div>}
+        {error && error.toLowerCase().includes("failed to fetch") && resolvedSupabaseUrl && (
+          <div className="bg-white border rounded-md p-4 mb-4 text-xs text-muted-foreground">
+            <div>ดูเหมือนเชื่อมต่อ Supabase ไม่ได้ (network/CORS/DNS/ถูกบล็อกโดย extension)</div>
+            <div>
+              ลองเปิดลิงก์นี้ในแท็บใหม่:{" "}
+              <a className="underline" href={resolvedSupabaseUrl} target="_blank" rel="noreferrer">
+                {resolvedSupabaseUrl}
+              </a>
+            </div>
+          </div>
+        )}
 
         {records.length === 0 ? (
           <div className="bg-white border rounded-md p-6 text-sm text-muted-foreground">

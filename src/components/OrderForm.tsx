@@ -643,13 +643,21 @@ const OrderForm = () => {
   const autoSaveSeqRef = useRef(0);
   const lastSavedSnapshotRef = useRef<string | null>(null);
 
-  const getErrorMessage = (err: unknown) => {
+  const getErrorMessage = useCallback((err: unknown) => {
     if (err instanceof Error) return err.message;
     if (typeof err === "object" && err && "message" in err && typeof (err as { message?: unknown }).message === "string") {
       return (err as { message: string }).message;
     }
     return "บันทึก PO ไม่สำเร็จ";
-  };
+  }, []);
+
+  const getFriendlySaveError = useCallback((err: unknown) => {
+    const msg = getErrorMessage(err);
+    if (msg.toLowerCase().includes("failed to fetch")) {
+      return "เชื่อมต่อ Supabase ไม่ได้ (ตรวจสอบว่าโปรเจกต์ Supabase ยัง Active, ค่า VITE_SUPABASE_URL ถูกต้อง, และไม่ได้ถูกบล็อกโดย network/extension)";
+    }
+    return msg;
+  }, [getErrorMessage]);
 
   const persistPO = useCallback(async (mode: "insert" | "update") => {
     if (!supabase) {
@@ -773,7 +781,7 @@ const OrderForm = () => {
         } catch (err) {
           if (seq !== autoSaveSeqRef.current) return;
           setAutoSaveStatus("error");
-          toast.error(getErrorMessage(err));
+          toast.error(getFriendlySaveError(err));
         }
       };
       void run();
@@ -782,7 +790,7 @@ const OrderForm = () => {
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [activePoId, formData, freeNotes, isDownloadingPdf, isSavingPo, orderItems, persistPO, poIdParam, poLoadedOnce, signature]);
+  }, [activePoId, formData, freeNotes, getFriendlySaveError, isDownloadingPdf, isSavingPo, orderItems, persistPO, poIdParam, poLoadedOnce, signature]);
 
   const addFreeNote = () => {
     const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
