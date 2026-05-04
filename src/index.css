@@ -100,28 +100,30 @@ All colors MUST be HSL.
 
   html,
   body {
-    margin: 0;
-    padding: 0;
-    background: #ffffff !important;
-  }
-
-  .print-hide {
-    display: none !important;
-  }
-
-  .print-page {
+    width: 297mm;
+    height: 210mm;
+    margin: 0 !important;
     padding: 0 !important;
-    background: #ffffff !important;
+    background: #fff !important;
   }
 
-  .print-overflow-visible {
-    overflow: visible !important;
+  body * {
+    visibility: hidden !important;
+  }
+
+  #order-form-capture,
+  #order-form-capture * {
+    visibility: visible !important;
   }
 
   #order-form-capture {
-    width: 297mm !important;
-    min-height: 210mm !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
     margin: 0 !important;
     box-shadow: none !important;
+    overflow: visible !important;
+    width: 297mm !important;
+    min-height: 210mm !important;
   }
 }
