@@ -91,3 +91,37 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff !important;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-page {
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .print-overflow-visible {
+    overflow: visible !important;
+  }
+
+  #order-form-capture {
+    width: 297mm !important;
+    min-height: 210mm !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+}

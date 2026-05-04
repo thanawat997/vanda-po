@@ -1224,9 +1224,9 @@ const OrderForm = () => {
   }, [handleDownloadPdf, poIdParam, poLoadedOnce, shouldAutoDownload]);
 
   return (
-    <div className="min-h-screen bg-muted p-2 sm:p-4">
+    <div className="print-page min-h-screen bg-muted p-2 sm:p-4">
       <div className="max-w-[1200px] mx-auto">
-        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-end gap-2 py-2 mb-2 bg-muted/80 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
+        <div className="print-hide sticky top-0 z-10 flex flex-wrap items-center justify-end gap-2 py-2 mb-2 bg-muted/80 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
           {autoSaveStatus !== "idle" && (
             <div className="mr-auto text-xs text-muted-foreground">
               {autoSaveStatus === "saving" ? "กำลังบันทึก..." : autoSaveStatus === "saved" ? "บันทึกอัตโนมัติแล้ว" : "บันทึกไม่สำเร็จ"}
@@ -1345,7 +1345,7 @@ const OrderForm = () => {
             ดาวน์โหลด PDF
           </Button>
         </div>
-        <div className="w-full overflow-x-auto pb-6">
+        <div className="print-overflow-visible w-full overflow-x-auto pb-6">
           <div
             ref={formRef}
             id="order-form-capture"
@@ -2036,7 +2036,7 @@ const OrderForm = () => {
         </div>
 
         {/* Add Row Button */}
-        <div className="mt-4 flex justify-center">
+        <div className="print-hide mt-4 flex justify-center">
           <Button onClick={addOrderItem} variant="outline" className="gap-2">
             <Plus className="w-4 h-4" />
             เพิ่มแถว
